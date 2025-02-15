@@ -1,3 +1,4 @@
+import { AUTH_ACTIONS, METHOD } from "../page/constants";
 import { apiGateway } from "./apiGateway";
 
 interface LoginCredentials {
@@ -28,26 +29,42 @@ export const authApi = apiGateway.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<AuthResponse, LoginCredentials>({
       query: (credentials) => ({
-        actionName: "auth/login",
-        methodType: "POST",
+        actionName: AUTH_ACTIONS.LOGIN,
+        methodType: METHOD.POST,
         body: credentials,
       }),
     }),
     register: builder.mutation<AuthResponse, RegisterCredentials>({
       query: (credentials) => ({
-        actionName: "auth/register",
-        methodType: "POST",
+        actionName: AUTH_ACTIONS.REGISTER,
+        methodType: METHOD.POST,
         body: credentials,
       }),
     }),
     logout: builder.mutation<void, void>({
       query: () => ({
-        actionName: "auth/logout",
-        methodType: "POST",
+        actionName: AUTH_ACTIONS.LOGOUT,
+        methodType: METHOD.POST,
+      }),
+    }),
+    updateProfile: builder.mutation({
+      query: (formData) => ({
+        actionName: AUTH_ACTIONS.UPDATE_PROFILE(
+          formData.get("userId") as string
+        ),
+        methodType: METHOD.PUT,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
       }),
     }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation } =
-  authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useUpdateProfileMutation,
+} = authApi;

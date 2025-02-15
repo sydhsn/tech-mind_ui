@@ -9,15 +9,19 @@ const axiosBaseQuery: BaseQueryFn<
     actionName: string;
     body?: Record<string, any>;
     methodType: "GET" | "POST" | "PUT" | "DELETE";
+    headers?: Record<string, string>;
   },
   unknown,
   unknown
-> = async ({ actionName, body, methodType }) => {
+> = async ({ actionName, body, methodType, headers }) => {
   try {
     const config: AxiosRequestConfig = {
       url: `${BASE_URL}${actionName}`,
       method: methodType,
       data: body,
+      headers: headers ?? {
+        "Content-Type": "application/json",
+      },
     };
 
     const response = await axios(config);
