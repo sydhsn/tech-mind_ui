@@ -15,12 +15,6 @@ import StudentDashboard from "./page/StudentDashboard";
 import TeacherDashboard from "./page/TeacherDashboard";
 import { AuthProvider } from "./components/AuthProvider";
 import { RoleProtectedRoute } from "./components/ProtectedRoute";
-// teacher dashboard pages
-import MyCourses from "./page/TeacherDashboard/MyCourses";
-import AddCourse from "./page/TeacherDashboard/addCourse";
-import Analytics from "./page/TeacherDashboard/Analytics";
-import SettingsPage from "./page/TeacherDashboard/Settings";
-import Students from "./page/TeacherDashboard/Students";
 
 // Define routes using JSX
 const routes = createRoutesFromElements(
