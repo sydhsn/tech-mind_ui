@@ -1,30 +1,77 @@
-import React from "react";
+import React, { useState } from "react";
+import { BarChart, BookOpen, PlusCircle, Settings, Users } from "lucide-react";
+import Sidebar from "../../components/Sidebar";
+import Analytics from "./Analytics";
+import SettingsPage from "./Settings";
+import Students from "./Students";
+import MyCourses from "./MyCourses";
+import AddCourse from "./addCourse";
 
 const TeacherDashboard: React.FC = () => {
-  const teacherCourses = [
-    { id: 1, title: "React for Beginners", students: 25 },
-    { id: 2, title: "Node.js & Express", students: 18 },
+  // Manage active component
+  const [activePage, setActivePage] = useState("MyCourses");
+
+  // Sidebar menu items
+  const menuItems = [
+    {
+      name: "My Courses",
+      key: "MyCourses",
+      icon: <BookOpen className="w-5 h-5" />,
+    },
+    { name: "Students", key: "Students", icon: <Users className="w-5 h-5" /> },
+    {
+      name: "Analytics",
+      key: "Analytics",
+      icon: <BarChart className="w-5 h-5" />,
+    },
+    {
+      name: "Settings",
+      key: "SettingsPage",
+      icon: <Settings className="w-5 h-5" />,
+    },
+    {
+      name: "Add Course",
+      key: "AddCourse",
+      icon: <PlusCircle className="w-5 h-5" />,
+    },
   ];
 
+  // Function to change the active page
+  const handleMenuClick = (key: string) => {
+    setActivePage(key);
+  };
+
+  // Function to render the active component
+  const renderComponent = () => {
+    switch (activePage) {
+      case "MyCourses":
+        return <MyCourses />;
+      case "Students":
+        return <Students />;
+      case "Analytics":
+        return <Analytics />;
+      case "SettingsPage":
+        return <SettingsPage />;
+      case "AddCourse":
+        return <AddCourse />;
+      default:
+        return <MyCourses />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
-      <h1 className="text-3xl font-bold mb-6">Teacher Dashboard</h1>
-      <button className="mb-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-        + Add New Course
-      </button>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {teacherCourses.map((course) => (
-          <div key={course.id} className="bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold">{course.title}</h2>
-            <p className="text-gray-400 mt-2">
-              Students Enrolled: {course.students}
-            </p>
-            <button className="mt-4 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">
-              Manage Course
-            </button>
-          </div>
-        ))}
-      </div>
+    <div className="min-h-screen bg-gray-900 text-white flex">
+      {/* Sidebar with dynamic menu selection */}
+      <Sidebar
+        title="Teacher Dashboard"
+        menuItems={menuItems}
+        onMenuClick={handleMenuClick}
+      />
+
+      {/* Main content area */}
+      <main className="ml-2 mt-14 flex-1 p-8 overflow-y-auto">
+        {renderComponent()}
+      </main>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Menu, X, User } from "lucide-react";
 import {
   DropdownMenu,
@@ -14,18 +14,8 @@ import { useAuth } from "../AuthProvider";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const { logout, isAuthenticated, user } = useAuth();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   // Ensure user is defined before accessing user?.role
   const dashboardPath =
@@ -36,11 +26,7 @@ export default function Header() {
       : "/student-dashboard";
 
   return (
-    <header
-      className={`bg-black text-white shadow-md w-full px-4 py-1 flex justify-between items-center transition-all ${
-        scrolled ? "fixed top-0 left-0 z-10 shadow-lg" : "relative"
-      }`}
-    >
+    <header className="bg-black text-white shadow-md w-full px-4 py-1 flex justify-between items-center fixed top-0 left-0 z-10">
       {/* Logo */}
       <div className="flex items-center space-x-2 cursor-pointer">
         <img src={Logo} alt="Logo" onClick={() => navigate("/")} />
@@ -66,7 +52,7 @@ export default function Header() {
           </a>
           {isAuthenticated && user?.role && (
             <a
-              href={dashboardPath} // This should be '/teacher-dashboard' if user?.role is teacher
+              href={dashboardPath}
               className="text-gray-300 hover:text-white cursor-pointer"
             >
               {user?.role === "admin"

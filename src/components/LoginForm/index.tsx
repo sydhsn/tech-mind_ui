@@ -13,10 +13,17 @@ interface LoginFormProps extends React.ComponentProps<"div"> {
     password: string;
     isLogin: boolean;
   }) => void;
+  isLogin: boolean;
+  setIsLogin: (isLogin: boolean) => void;
 }
 
-export function LoginForm({ className, onAuth, ...props }: LoginFormProps) {
-  const [isLogin, setIsLogin] = useState(true);
+export function LoginForm({
+  className,
+  onAuth,
+  isLogin,
+  setIsLogin,
+  ...props
+}: LoginFormProps) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
