@@ -1,6 +1,7 @@
 export const METHOD = {
   POST: "POST",
   PUT: "PUT",
+  GET: "GET",
 } as const;
 
 export const AUTH_ACTIONS = {
@@ -11,5 +12,7 @@ export const AUTH_ACTIONS = {
 } as const;
 
 export const COURSE_ACTIONS = {
-  CREATE_COURSE: "courses",
+  COURSE_BY_ID: "courses",
+  CREATE_COURSE: "courses/create",
+  GET_MY_COURSES: "courses/my-courses",
 } as const;

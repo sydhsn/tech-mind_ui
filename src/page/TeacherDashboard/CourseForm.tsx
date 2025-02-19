@@ -2,17 +2,8 @@ import React from "react";
 import { Button } from "../../components/ui/button";
 import InputField from "../../components/ui/InputField";
 import SelectField from "../../components/ui/SelectField";
-import { Save } from "lucide-react"; // Import the Save icon
-
-type Course = {
-  courseTitle: string;
-  subTitle: string;
-  description: string;
-  category: string;
-  courseLevel: string;
-  coursePrice: number;
-  courseThumbnail: string;
-};
+import { Save } from "lucide-react";
+import { ICourse } from "../../services/courseAPI";
 
 const CourseForm = ({
   courseData,
@@ -20,7 +11,7 @@ const CourseForm = ({
   handleCourseChange,
   handleSaveCourse,
 }: {
-  courseData: Course;
+  courseData: ICourse;
   errors: { [key: string]: string };
   handleCourseChange: (
     e: React.ChangeEvent<
@@ -33,7 +24,7 @@ const CourseForm = ({
     <InputField
       label="Course Title"
       name="courseTitle"
-      value={courseData.courseTitle}
+      value={courseData.courseTitle ?? ""}
       onChange={handleCourseChange}
       error={errors.courseTitle}
       required
@@ -41,7 +32,7 @@ const CourseForm = ({
     <InputField
       label="Subtitle"
       name="subTitle"
-      value={courseData.subTitle}
+      value={courseData.subTitle ?? ""}
       onChange={handleCourseChange}
       error={errors.subTitle}
       required
@@ -49,7 +40,7 @@ const CourseForm = ({
     <InputField
       label="Description"
       name="description"
-      value={courseData.description}
+      value={courseData.description ?? ""}
       onChange={handleCourseChange}
       type="textarea"
       error={errors.description}
@@ -58,7 +49,7 @@ const CourseForm = ({
     <SelectField
       label="Category"
       name="category"
-      value={courseData.category}
+      value={courseData.category ?? ""}
       onChange={handleCourseChange}
       options={[
         { value: "Programming", label: "Programming" },
@@ -77,12 +68,12 @@ const CourseForm = ({
     <SelectField
       label="Level"
       name="courseLevel"
-      value={courseData.courseLevel}
+      value={courseData.courseLevel ?? "Beginner"}
       onChange={handleCourseChange}
       options={[
         { value: "Beginner", label: "Beginner" },
-        { value: "Intermediate", label: "Intermediate" },
-        { value: "Advanced", label: "Advanced" },
+        { value: "Medium", label: "Medium" },
+        { value: "Advance", label: "Advance" },
       ]}
       error={errors.courseLevel}
       required
@@ -90,7 +81,7 @@ const CourseForm = ({
     <InputField
       label="Price"
       name="coursePrice"
-      value={courseData.coursePrice}
+      value={courseData.coursePrice ?? ""}
       onChange={handleCourseChange}
       type="number"
       error={errors.coursePrice}
@@ -99,7 +90,7 @@ const CourseForm = ({
     <InputField
       label="Thumbnail URL"
       name="courseThumbnail"
-      value={courseData.courseThumbnail}
+      value={courseData.courseThumbnail ?? ""}
       onChange={handleCourseChange}
       error={errors.courseThumbnail}
       required
@@ -107,6 +98,7 @@ const CourseForm = ({
     <Button
       variant="outline"
       onClick={handleSaveCourse}
+      type="button"
       className="border-white text-white hover:bg-gray-700 cursor-pointer flex items-center gap-2"
     >
       <Save className="w-5 h-5" /> {/* Save Icon */}

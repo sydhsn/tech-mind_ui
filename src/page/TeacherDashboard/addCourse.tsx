@@ -1,13 +1,21 @@
-import React, { use, useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
-import axios from "axios";
-import * as Yup from "yup";
 import { Button } from "../../components/ui/button";
-import CourseForm from "./CourseForm";
-import LecturesForm from "./LecturesForm";
-import { Upload } from "lucide-react";
-import { useCreateCourseMutation } from "../../services/courseAPI";
+import { PlusCircle, Save, Upload } from "lucide-react";
+import {
+  ICourse,
+  useCreateCourseMutation,
+  useLazyFindCourseByIdQuery,
+  //useUpdateCourseMutation,
+} from "../../services/courseAPI";
 import { useAuth } from "../../components/AuthProvider";
+import InputField from "../../components/ui/InputField";
+import CheckboxField from "../../components/ui/CheckboxField";
+import SelectField from "../../components/ui/SelectField";
+
+interface AddCourseProps {
+  id?: string;
+}
 
 // Define the Lecture type
 type Lecture = {
@@ -18,36 +26,9 @@ type Lecture = {
   duration: number;
 };
 
-// Yup validation schema for course data
-const courseSchema = Yup.object().shape({
-  courseTitle: Yup.string().required("Course title is required"),
-  subTitle: Yup.string().required("Subtitle is required"),
-  description: Yup.string().required("Description is required"),
-  category: Yup.string().required("Category is required"),
-  courseLevel: Yup.string().required("Course level is required"),
-  coursePrice: Yup.number()
-    .min(0, "Price cannot be negative")
-    .required("Course price is required"),
-  courseThumbnail: Yup.string()
-    .url("Invalid URL")
-    .required("Thumbnail URL is required"),
-  isPublished: Yup.boolean(),
-});
-
-// Yup validation schema for lecture data
-const lectureSchema = Yup.object().shape({
-  lectureTitle: Yup.string().required("Lecture title is required"),
-  videoUrl: Yup.string().url("Invalid URL").required("Video URL is required"),
-  publicId: Yup.string().required("Public ID is required"),
-  isPreviewFree: Yup.boolean(),
-  duration: Yup.number()
-    .min(0, "Duration cannot be negative")
-    .required("Duration is required"),
-});
-
-const AddCourse = () => {
+const AddCourse = ({ id }: AddCourseProps) => {
   const { user } = useAuth();
-  const [courseData, setCourseData] = useState({
+  const [courseData, setCourseData] = useState<ICourse>({
     courseTitle: "",
     subTitle: "",
     description: "",
@@ -55,21 +36,37 @@ const AddCourse = () => {
     courseLevel: "Beginner",
     coursePrice: 0,
     courseThumbnail: "",
-    isPublished: false,
-    isPreviewFree: false,
+    userId: user?.id ?? "",
+    duration: 0,
+    creator: user?.id ?? "",
   });
 
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [courseId, setCourseId] = useState<string | null>(null);
 
-  // apis
-  const [createCourse, { error: createCourseError, data: courseResponseData }] =
+  // APIs
+  const [createCourse, { error: createCourseError }] =
     useCreateCourseMutation();
+  console.log("createCourseError", createCourseError);
+  /*  const [updateCourse, { error: updateCourseError }] =
+    useUpdateCourseMutation(); */
 
-  console.log(courseResponseData);
-  console.log(createCourseError);
+  //console.log("updateCourseError", updateCourseError);
 
+  // Find course by ID
+  const [
+    findCourseById,
+    {
+      data: courseByIdData,
+      error: findCourseByIdError,
+      isSuccess: courseDataByIdSuccess,
+    },
+  ] = useLazyFindCourseByIdQuery();
+
+  console.log("findCourseByIdError", findCourseByIdError);
+
+  // Handle course change
   const handleCourseChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -79,6 +76,7 @@ const AddCourse = () => {
     setCourseData({ ...courseData, [name]: value });
   };
 
+  // Handle lecture change
   const handleLectureChange = (
     index: number,
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -95,6 +93,7 @@ const AddCourse = () => {
     setLectures(updatedLectures);
   };
 
+  // Add a new lecture
   const addLecture = () => {
     setLectures([
       ...lectures,
@@ -108,80 +107,36 @@ const AddCourse = () => {
     ]);
   };
 
-  const validateCourseData = async () => {
-    console.log("Validating course data...", courseData);
-    try {
-      await courseSchema.validate(courseData, { abortEarly: false });
-      setErrors({});
-      return true;
-    } catch (err) {
-      if (err instanceof Yup.ValidationError) {
-        const validationErrors: { [key: string]: string } = {};
-        err.inner.forEach((error) => {
-          if (error.path) {
-            validationErrors[error.path] = error.message;
-          }
-        });
-        setErrors(validationErrors);
-      }
-      return false;
-    }
-  };
-
-  const validateLectureData = async (lecture: Lecture) => {
-    try {
-      await lectureSchema.validate(lecture, { abortEarly: false });
-      return true;
-    } catch (err) {
-      if (err instanceof Yup.ValidationError) {
-        const validationErrors: { [key: string]: string } = {};
-        err.inner.forEach((error) => {
-          if (error.path) {
-            validationErrors[error.path] = error.message;
-          }
-        });
-        setErrors(validationErrors);
-      }
-      return false;
-    }
-  };
-
+  // Save or update course
   const handleSaveCourse = async () => {
-    /* const isValid = await validateCourseData();
-    if (!isValid) return;
- */
     try {
-      const payload = {
-        ...courseData,
-        userId: user?.id,
-        duration: 0,
-        level: courseData.courseLevel,
-        price: courseData.coursePrice,
-        creator: user?.id || "defaultCreatorId",
-      };
-      const response = await createCourse(payload);
-      console.log("Course created:", response.data);
-      setCourseId(response?.data?._id ?? null);
-      alert("Course saved successfully! You can now add lectures.");
+      if (id) {
+        // Update existing course
+        //const response = await updateCourse({ id, ...courseData }).unwrap();
+        //console.log("Course updated successfully!", response);
+        //setCourseId(response?._id ?? null);
+        alert("Course updated successfully!");
+      } else {
+        // Create new course
+        const response = await createCourse(courseData).unwrap();
+        console.log("Course saved successfully!", response);
+        setCourseId(response?._id ?? null);
+        alert("Course saved successfully! You can now add lectures.");
+      }
     } catch (error) {
-      console.error("Error creating course:", error);
-      alert("Failed to save course.");
+      console.error("Error saving/updating course:", error);
+      alert("Failed to save/update course.");
     }
   };
 
-  console.log("Course:", courseData);
-
+  // Save lectures
   const handleSaveLectures = async () => {
     if (!courseId) {
       alert("Please save the course first.");
       return;
     }
 
-    const isValid = await Promise.all(lectures.map(validateLectureData));
-    if (!isValid.every((valid) => valid)) return;
-
     try {
-      await axios.put(`/api/courses/${courseId}/lectures`, { lectures });
       console.log("Lectures updated successfully!");
       alert("Lectures saved successfully!");
     } catch (error) {
@@ -190,24 +145,24 @@ const AddCourse = () => {
     }
   };
 
-  const handlePublishCourse = async () => {
-    if (!courseId || lectures.length === 0) {
-      alert(
-        "Please save the course and add at least one lecture before publishing."
-      );
-      return;
+  // Fetch course data if ID exists
+  useEffect(() => {
+    if (id) {
+      findCourseById(id);
     }
+  }, [id]);
 
-    try {
-      await axios.patch(`/api/courses/${courseId}/publish`, {
-        isPublished: true,
+  // Populate course data if fetched successfully
+  useEffect(() => {
+    if (courseDataByIdSuccess && courseByIdData) {
+      setCourseData({
+        ...courseByIdData,
+        userId: user?.id ?? "",
+        creator: user?.id ?? "",
       });
-      alert("Course published successfully!");
-    } catch (error) {
-      console.error("Error publishing course:", error);
-      alert("Failed to publish course.");
+      setLectures([]);
     }
-  };
+  }, [courseDataByIdSuccess, courseByIdData]);
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -215,7 +170,8 @@ const AddCourse = () => {
         <div className="flex justify-end items-center mb-4">
           <Button
             variant="outline"
-            onClick={handlePublishCourse}
+            onClick={() => alert("Publish course")}
+            type="button"
             className="border-white text-white hover:bg-gray-700 cursor-pointer flex items-center gap-2"
             disabled={!courseId || lectures.length === 0}
           >
@@ -241,23 +197,160 @@ const AddCourse = () => {
           </Tabs.List>
 
           <Tabs.Content value="course" className="space-y-4">
-            <h2 className="text-xl font-semibold">Course Details</h2>
-            <CourseForm
-              courseData={courseData}
-              errors={errors}
-              handleCourseChange={handleCourseChange}
-              handleSaveCourse={handleSaveCourse}
-            />
+            <h2 className="text-xl font-semibold">
+              {id ? "Edit Course" : "Add Course"}
+            </h2>
+            <form className="space-y-4">
+              <InputField
+                label="Course Title"
+                name="courseTitle"
+                value={courseData.courseTitle ?? ""}
+                onChange={handleCourseChange}
+                error={errors.courseTitle}
+                required
+              />
+              <InputField
+                label="Subtitle"
+                name="subTitle"
+                value={courseData.subTitle ?? ""}
+                onChange={handleCourseChange}
+                error={errors.subTitle}
+                required
+              />
+              <InputField
+                label="Description"
+                name="description"
+                value={courseData.description ?? ""}
+                onChange={handleCourseChange}
+                type="textarea"
+                error={errors.description}
+                required
+              />
+              <SelectField
+                label="Category"
+                name="category"
+                value={courseData.category ?? ""}
+                onChange={handleCourseChange}
+                options={[
+                  { value: "Programming", label: "Programming" },
+                  { value: "Design", label: "Design" },
+                  { value: "Marketing", label: "Marketing" },
+                  { value: "Business", label: "Business" },
+                  { value: "Photography", label: "Photography" },
+                  { value: "Music", label: "Music" },
+                  { value: "Health & Fitness", label: "Health & Fitness" },
+                  {
+                    value: "Personal Development",
+                    label: "Personal Development",
+                  },
+                  { value: "Language", label: "Language" },
+                ]}
+                error={errors.category}
+                required
+              />
+              <SelectField
+                label="Level"
+                name="courseLevel"
+                value={courseData.courseLevel ?? "Beginner"}
+                onChange={handleCourseChange}
+                options={[
+                  { value: "Beginner", label: "Beginner" },
+                  { value: "Medium", label: "Medium" },
+                  { value: "Advance", label: "Advance" },
+                ]}
+                error={errors.courseLevel}
+                required
+              />
+              <InputField
+                label="Price"
+                name="coursePrice"
+                value={courseData.coursePrice ?? ""}
+                onChange={handleCourseChange}
+                type="number"
+                error={errors.coursePrice}
+                required
+              />
+              <InputField
+                label="Thumbnail URL"
+                name="courseThumbnail"
+                value={courseData.courseThumbnail ?? ""}
+                onChange={handleCourseChange}
+                error={errors.courseThumbnail}
+                required
+              />
+              <Button
+                variant="outline"
+                onClick={handleSaveCourse}
+                type="button"
+                className="border-white text-white hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+              >
+                <Save className="w-5 h-5" /> {/* Save Icon */}
+                {id ? "Update Course" : "Save Course"}
+              </Button>
+            </form>
           </Tabs.Content>
 
           <Tabs.Content value="lectures" className="space-y-4">
-            <LecturesForm
-              lectures={lectures}
-              errors={errors}
-              handleLectureChange={handleLectureChange}
-              addLecture={addLecture}
-              handleSaveLectures={handleSaveLectures}
-            />
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold">Lectures</h2>
+              {lectures.map((lecture, index) => (
+                <div key={index} className="space-y-4 border p-4 rounded-lg">
+                  <InputField
+                    label="Lecture Title"
+                    name="lectureTitle"
+                    value={lecture.lectureTitle}
+                    onChange={(e) => handleLectureChange(index, e)}
+                    error={errors[`lectures[${index}].lectureTitle`]}
+                  />
+                  <InputField
+                    label="Video URL"
+                    name="videoUrl"
+                    value={lecture.videoUrl}
+                    onChange={(e) => handleLectureChange(index, e)}
+                    error={errors[`lectures[${index}].videoUrl`]}
+                  />
+                  <InputField
+                    label="Public ID"
+                    name="publicId"
+                    value={lecture.publicId}
+                    onChange={(e) => handleLectureChange(index, e)}
+                    error={errors[`lectures[${index}].publicId`]}
+                  />
+                  <InputField
+                    label="Duration (in minutes)"
+                    name="duration"
+                    value={lecture.duration}
+                    onChange={(e) => handleLectureChange(index, e)}
+                    type="number"
+                    error={errors[`lectures[${index}].duration`]}
+                  />
+                  <CheckboxField
+                    label="Free Preview"
+                    name="isPreviewFree"
+                    checked={lecture.isPreviewFree}
+                    onChange={(e) => handleLectureChange(index, e)}
+                  />
+                </div>
+              ))}
+              <div className="flex gap-4">
+                <Button
+                  variant="outline"
+                  onClick={addLecture}
+                  className="border-white text-white hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                >
+                  <PlusCircle className="w-5 h-5" /> {/* Add Lecture Icon */}
+                  Add Lecture
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSaveLectures}
+                  className="border-white text-white hover:bg-gray-700 cursor-pointer flex items-center gap-2"
+                >
+                  <Save className="w-5 h-5" /> {/* Save Lectures Icon */}
+                  Save Lectures
+                </Button>
+              </div>
+            </div>
           </Tabs.Content>
         </Tabs.Root>
       </div>
