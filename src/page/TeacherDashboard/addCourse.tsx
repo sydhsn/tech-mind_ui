@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import axios from "axios";
 import * as Yup from "yup";
@@ -6,6 +6,8 @@ import { Button } from "../../components/ui/button";
 import CourseForm from "./CourseForm";
 import LecturesForm from "./LecturesForm";
 import { Upload } from "lucide-react";
+import { useCreateCourseMutation } from "../../services/courseAPI";
+import { useAuth } from "../../components/AuthProvider";
 
 // Define the Lecture type
 type Lecture = {
@@ -44,6 +46,7 @@ const lectureSchema = Yup.object().shape({
 });
 
 const AddCourse = () => {
+  const { user } = useAuth();
   const [courseData, setCourseData] = useState({
     courseTitle: "",
     subTitle: "",
@@ -59,6 +62,13 @@ const AddCourse = () => {
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [courseId, setCourseId] = useState<string | null>(null);
+
+  // apis
+  const [createCourse, { error: createCourseError, data: courseResponseData }] =
+    useCreateCourseMutation();
+
+  console.log(courseResponseData);
+  console.log(createCourseError);
 
   const handleCourseChange = (
     e: React.ChangeEvent<
@@ -99,6 +109,7 @@ const AddCourse = () => {
   };
 
   const validateCourseData = async () => {
+    console.log("Validating course data...", courseData);
     try {
       await courseSchema.validate(courseData, { abortEarly: false });
       setErrors({});
@@ -136,19 +147,29 @@ const AddCourse = () => {
   };
 
   const handleSaveCourse = async () => {
-    const isValid = await validateCourseData();
+    /* const isValid = await validateCourseData();
     if (!isValid) return;
-
+ */
     try {
-      const response = await axios.post("/api/courses", courseData);
+      const payload = {
+        ...courseData,
+        userId: user?.id,
+        duration: 0,
+        level: courseData.courseLevel,
+        price: courseData.coursePrice,
+        creator: user?.id || "defaultCreatorId",
+      };
+      const response = await createCourse(payload);
       console.log("Course created:", response.data);
-      setCourseId(response.data.id);
+      setCourseId(response?.data?._id ?? null);
       alert("Course saved successfully! You can now add lectures.");
     } catch (error) {
       console.error("Error creating course:", error);
       alert("Failed to save course.");
     }
   };
+
+  console.log("Course:", courseData);
 
   const handleSaveLectures = async () => {
     if (!courseId) {

@@ -9,3 +9,7 @@ export const AUTH_ACTIONS = {
   LOGOUT: "auth/logout",
   UPDATE_PROFILE: (userId: string) => `auth/profile/update/${userId}`,
 } as const;
+
+export const COURSE_ACTIONS = {
+  CREATE_COURSE: "courses",
+} as const;
