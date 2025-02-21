@@ -42,13 +42,13 @@ const AddCourse = ({ id }: AddCourseProps) => {
   });
 
   const [lectures, setLectures] = useState<Lecture[]>([]);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [errors] = useState<{ [key: string]: string }>({});
   const [courseId, setCourseId] = useState<string | null>(null);
 
   // APIs
   const [createCourse, { error: createCourseError }] =
     useCreateCourseMutation();
-  console.log("createCourseError", createCourseError);
+  //console.log("createCourseError", createCourseError);
   /*  const [updateCourse, { error: updateCourseError }] =
     useUpdateCourseMutation(); */
 
@@ -64,7 +64,7 @@ const AddCourse = ({ id }: AddCourseProps) => {
     },
   ] = useLazyFindCourseByIdQuery();
 
-  console.log("findCourseByIdError", findCourseByIdError);
+  //console.log("findCourseByIdError", findCourseByIdError);
 
   // Handle course change
   const handleCourseChange = (
