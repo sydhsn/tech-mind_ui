@@ -51,7 +51,7 @@ const lectureAPI = apiGateway.injectEndpoints({
       query: ({ courseId, lectures }) => ({
         actionName: `${LECTURE_ACTIONS.LECTURES}/${courseId}`, // Include courseId in the URL
         methodType: METHOD.POST,
-        body: { lectures }, // Send lectures in the body
+        body: lectures, // Send lectures in the body
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",

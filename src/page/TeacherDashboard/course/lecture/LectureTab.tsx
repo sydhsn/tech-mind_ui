@@ -91,12 +91,11 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
       return;
     }
 
+    // Construct the payload as a single object
     const payload = {
       lectureTitle: data.lectureTitle,
-      videoInfo: {
-        videoUrl: data.videoInfo.videoUrl,
-        publicId: data.videoInfo.publicId,
-      },
+      videoFile: data.videoInfo.videoUrl, // Add this line
+      publicId: data.videoInfo.publicId,
       duration: data.duration,
       isPreviewFree: data.isPreviewFree,
     };
@@ -104,6 +103,7 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
     console.log("Form data being submitted:", payload); // Log the payload
 
     try {
+      // Send a single object
       await saveLectures({ courseId, lectures: [payload] }).unwrap();
       toast.success("Lecture saved successfully!");
     } catch (error) {
