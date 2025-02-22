@@ -4,6 +4,19 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import axios from "axios";
 import { useAuth } from "../../../components/AuthProvider";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import "./react-quill.scss";
+
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["link", "image"],
+    ["clean"],
+  ],
+};
 
 interface CourseTabProps {
   courseId?: string;
@@ -25,6 +38,7 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
   const { user } = useAuth();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isEditing] = useState<boolean>(!!courseId);
+  const [description, setDescription] = useState<string>("");
 
   const {
     register,
@@ -50,6 +64,7 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
           setValue("courseTitle", courseData.courseTitle);
           setValue("subTitle", courseData.subTitle);
           setValue("description", courseData.description);
+          setDescription(courseData.description); // Set the description state
           setValue("category", courseData.category);
           setValue("courseLevel", courseData.courseLevel);
           setValue("coursePrice", courseData.coursePrice);
@@ -92,6 +107,12 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
         console.error("Upload failed:", error);
       }
     }
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+    setValue("description", value); // Update form value
+    trigger("description"); // Revalidate the field
   };
 
   return (
@@ -137,11 +158,13 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
           <label className="block text-sm font-medium text-white">
             Description
           </label>
-          <textarea
-            {...register("description")}
-            className="w-full p-2 bg-gray-700 text-white rounded"
+          <ReactQuill
+            value={description}
+            onChange={handleDescriptionChange}
+            className="bg-gray-700 text-white rounded"
             placeholder="Enter description"
-          ></textarea>
+            modules={modules} // Apply custom toolbar
+          />
           {errors.description && (
             <p className="text-red-500 text-sm">{errors.description.message}</p>
           )}
