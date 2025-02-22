@@ -6,12 +6,14 @@ import {
 } from "../../services/courseAPI";
 import LectureTab from "./course/lecture/LectureTab";
 import CourseTab from "./course/CourseTab";
+import { useAuth } from "../../components/AuthProvider";
 
 interface AddCourseProps {
   id?: string | null;
 }
 
 const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
+  const { user } = useAuth();
   const [courseId, setCourseId] = useState<string | null>(id || null);
   const [activeTab, setActiveTab] = useState<"course" | "lectures">(
     id ? "course" : "course" // Default to "course" tab
@@ -27,9 +29,11 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
         // Update existing course
         const response = await updateCourse({
           id: courseId,
-          ...courseData,
+          course: {
+            ...courseData,
+            creator: user?.id,
+          },
         }).unwrap();
-        console.log("update response", response);
         toast.success("Course updated successfully!");
       } else {
         // Create new course

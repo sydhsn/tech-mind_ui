@@ -79,10 +79,10 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
   }, [courseId, setValue]);
 
   const onSubmit: SubmitHandler<any> = (data) => {
-    // Include the uploaded thumbnail URL in the form data
+    console.log("submit", data);
     data.courseThumbnail = thumbnailUrl;
     data.creator = user?.id;
-    onSaveCourse(data); // Call the save/update course handler
+    onSaveCourse(data);
   };
 
   const handleThumbnailUpload = async (
@@ -100,8 +100,8 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
         );
 
         // Store the uploaded URL
-        setThumbnailUrl(response.data.secure_url);
-        setValue("courseThumbnail", response.data.secure_url); // Update form value
+        setThumbnailUrl(response.data);
+        setValue("courseThumbnail", response.data); // Update form value
         trigger("courseThumbnail"); // Revalidate the field
       } catch (error) {
         console.error("Upload failed:", error);
