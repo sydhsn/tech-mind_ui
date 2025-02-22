@@ -1,15 +1,16 @@
 import React from "react";
 
 interface InputFieldProps {
-  label: string;
+  label?: string;
   name: string;
   value: string | number;
   onChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
-  type?: string;
-  required?: boolean;
+  type?: "text" | "number" | "textarea";
   error?: string;
+  required?: boolean;
+  disabled?: boolean;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -18,19 +19,26 @@ const InputField: React.FC<InputFieldProps> = ({
   value,
   onChange,
   type = "text",
-  required = false,
   error,
+  required = false,
+  disabled = false,
 }) => {
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-300">{label}</label>
+    <div className="space-y-2">
+      {label && (
+        <label className="block text-sm font-medium text-white">
+          {label} {required && <span className="text-red-500">*</span>}
+        </label>
+      )}
       {type === "textarea" ? (
         <textarea
           name={name}
           value={value}
           onChange={onChange}
-          className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          required={required}
+          className={`w-full p-2 bg-gray-700 text-white rounded ${
+            disabled ? "opacity-50" : ""
+          }`}
+          disabled={disabled}
         />
       ) : (
         <input
@@ -38,11 +46,13 @@ const InputField: React.FC<InputFieldProps> = ({
           name={name}
           value={value}
           onChange={onChange}
-          className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          required={required}
+          className={`w-full p-2 bg-gray-700 text-white rounded ${
+            disabled ? "opacity-50" : ""
+          }`}
+          disabled={disabled}
         />
       )}
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-sm">{error}</p>}
     </div>
   );
 };

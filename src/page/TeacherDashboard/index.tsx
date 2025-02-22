@@ -5,12 +5,13 @@ import Analytics from "./Analytics";
 import SettingsPage from "./Settings";
 import Students from "./Students";
 import MyCourses from "./MyCourses";
-import AddCourse from "./addCourse";
 import { Button } from "../../components/ui/button";
+import AddCourse from "./addCourse";
 
 const TeacherDashboard: React.FC = () => {
-  // Manage active component
+  // Manage active component and courseId
   const [activePage, setActivePage] = useState("MyCourses");
+  const [courseId, setCourseId] = useState<string | null>(null);
 
   // Sidebar menu items
   const menuItems = [
@@ -35,13 +36,26 @@ const TeacherDashboard: React.FC = () => {
   // Function to change the active page
   const handleMenuClick = (key: string) => {
     setActivePage(key);
+    setCourseId(null);
+  };
+
+  // Function to handle adding a new course
+  const handleAddCourse = () => {
+    setActivePage("AddCourse");
+    setCourseId(null);
+  };
+
+  // Function to handle editing a course
+  const handleEditCourse = (courseId: string) => {
+    setActivePage("AddCourse");
+    setCourseId(courseId);
   };
 
   // Function to render the active component
   const renderComponent = () => {
     switch (activePage) {
       case "MyCourses":
-        return <MyCourses />;
+        return <MyCourses onEditCourse={handleEditCourse} />;
       case "Students":
         return <Students />;
       case "Analytics":
@@ -49,9 +63,9 @@ const TeacherDashboard: React.FC = () => {
       case "SettingsPage":
         return <SettingsPage />;
       case "AddCourse":
-        return <AddCourse />;
+        return <AddCourse id={courseId} />;
       default:
-        return <MyCourses />;
+        return <MyCourses onEditCourse={handleEditCourse} />;
     }
   };
 
@@ -71,7 +85,7 @@ const TeacherDashboard: React.FC = () => {
           <div className="flex justify-end mb-6">
             <Button
               variant="outline"
-              onClick={() => setActivePage("AddCourse")}
+              onClick={handleAddCourse}
               className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none"
             >
               <PlusCircle className="w-5 h-5 mr-2" /> {/* Add Course Icon */}
