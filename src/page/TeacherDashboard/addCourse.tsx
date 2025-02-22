@@ -30,6 +30,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
           id: courseId,
           ...courseData,
         }).unwrap();
+        console.log("update response", response);
         toast.success("Course updated successfully!");
       } else {
         // Create new course

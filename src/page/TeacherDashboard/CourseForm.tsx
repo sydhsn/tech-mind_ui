@@ -3,7 +3,7 @@ import { Button } from "../../components/ui/button";
 import InputField from "../../components/ui/InputField";
 import SelectField from "../../components/ui/SelectField";
 import { Save } from "lucide-react";
-import { ICourse } from "../../services/courseAPI";
+import { ICourse } from "../../types/AddCourse";
 
 const CourseForm = ({
   courseData,
