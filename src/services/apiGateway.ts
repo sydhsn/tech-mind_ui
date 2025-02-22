@@ -2,8 +2,7 @@ import { BaseQueryFn, createApi } from "@reduxjs/toolkit/query/react";
 import axios, { AxiosRequestConfig, AxiosError } from "axios";
 
 // Corrected BASE_URL
-const BASE_URL =
-  import.meta.env.VITE_API_URL ?? "http://localhost:8080/api/v1/";
+const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 const axiosBaseQuery: BaseQueryFn<
   {

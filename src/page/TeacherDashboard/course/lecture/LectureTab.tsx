@@ -2,8 +2,7 @@ import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 /* import { useSaveLecturesMutation } from "../../services/courseAPI"; */
 
 interface LectureTabProps {
@@ -136,9 +135,6 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
           Save Lecture
         </button>
       </form>
-
-      {/* Toast Container */}
-      <ToastContainer />
     </div>
   );
 };

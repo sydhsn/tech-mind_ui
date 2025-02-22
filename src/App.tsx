@@ -15,6 +15,8 @@ import StudentDashboard from "./page/StudentDashboard";
 import TeacherDashboard from "./page/TeacherDashboard";
 import { AuthProvider } from "./components/AuthProvider";
 import { RoleProtectedRoute } from "./components/ProtectedRoute";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 // Define routes using JSX
 const routes = createRoutesFromElements(
@@ -84,9 +86,9 @@ const appRouter = createBrowserRouter(routes);
 function App() {
   return (
     <AuthProvider>
-      <main className="flex-1">
-        <RouterProvider router={appRouter} />
-      </main>
+      <RouterProvider router={appRouter} />
+      {/* Toast Container */}
+      <ToastContainer />
     </AuthProvider>
   );
 }
