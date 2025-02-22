@@ -20,7 +20,6 @@ const MyCourses: React.FC<MyCoursesProps> = ({ onEditCourse }) => {
 
   useEffect(() => {
     if (user?.id) {
-      console.log("Fetching courses for user ID:", user.id); // Debugging
       getMyCourse({
         userId: user?.id,
       });

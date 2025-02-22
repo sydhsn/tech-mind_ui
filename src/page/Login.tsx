@@ -49,12 +49,10 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (isLoginSuccess) {
-      console.log("Login data:", loginData);
       login(loginData);
       navigate("/");
     }
     if (isLoginError) {
-      console.log("Login error:", loginData);
       navigate("/login");
     }
   }, [loginData, isLoginSuccess, isLoginError, login, navigate]);

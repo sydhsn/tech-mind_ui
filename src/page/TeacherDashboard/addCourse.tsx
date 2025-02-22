@@ -18,13 +18,8 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
     id ? "course" : "course" // Default to "course" tab
   );
 
-  const [createCourse, { error: createCourseError }] =
-    useCreateCourseMutation();
-  const [updateCourse, { error: updateCourseError }] =
-    useUpdateCourseMutation();
-
-  console.log("createCourseError", createCourseError);
-  console.log("updateCourseError", updateCourseError);
+  const [createCourse] = useCreateCourseMutation();
+  const [updateCourse] = useUpdateCourseMutation();
 
   // Handle saving or updating the course
   const handleSaveCourse = async (courseData: any) => {
@@ -45,7 +40,6 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
       }
     } catch (error) {
       toast.error("Failed to save/update course. Please try again.");
-      console.error("Error saving/updating course:", error);
     }
   };
 
