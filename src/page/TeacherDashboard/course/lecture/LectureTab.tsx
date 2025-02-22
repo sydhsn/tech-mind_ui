@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -21,7 +21,7 @@ const lectureSchema = yup.object().shape({
 
 const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
   //const [saveLectures] = useSaveLecturesMutation();
-
+  console.log(courseId);
   const {
     register,
     handleSubmit,
@@ -32,6 +32,7 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
 
   const onSubmit: SubmitHandler<any> = async (data) => {
     try {
+      console.log(data);
       //await saveLectures({ courseId, lectures: [data] }).unwrap();
       toast.success("Lecture saved successfully!");
     } catch (error) {

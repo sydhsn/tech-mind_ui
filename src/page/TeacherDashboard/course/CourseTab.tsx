@@ -24,7 +24,7 @@ const courseSchema = yup.object().shape({
 const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
   const { user } = useAuth();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState<boolean>(!!courseId);
+  const [isEditing] = useState<boolean>(!!courseId);
 
   const {
     register,
