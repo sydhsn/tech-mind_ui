@@ -1,42 +1,114 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-toastify";
-/* import { useSaveLecturesMutation } from "../../services/courseAPI"; */
+import {
+  useSaveLectureToCourseMutation,
+  useUploadVideoMutation,
+} from "../../../../services/leactureAPI";
 
 interface LectureTabProps {
   courseId?: string | null;
 }
 
-// Yup validation schema for lectures
+interface LectureFormData {
+  lectureTitle: string;
+  videoInfo: {
+    videoUrl: string;
+    publicId: string;
+  };
+  duration: number;
+  isPreviewFree: boolean;
+}
+
 const lectureSchema = yup.object().shape({
   lectureTitle: yup.string().required("Lecture Title is required"),
-  videoFile: yup.mixed().required("Video File is required"),
+  videoInfo: yup.object().shape({
+    videoUrl: yup.string().required("Video File is required"),
+    publicId: yup.string().required("Public ID is required"),
+  }),
   duration: yup.number().required("Duration is required").min(0),
-  publicId: yup.string().required("Public ID is required"),
-  isPreviewFree: yup.boolean().required("Free Preview is required"),
+  isPreviewFree: yup
+    .boolean()
+    .default(false)
+    .required("Free Preview is required"),
 });
 
 const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
-  //const [saveLectures] = useSaveLecturesMutation();
-  console.log(courseId);
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
-  } = useForm({
+  } = useForm<LectureFormData>({
     resolver: yupResolver(lectureSchema),
   });
 
-  const onSubmit: SubmitHandler<any> = async (data) => {
+  const [uploadVideo] = useUploadVideoMutation();
+  const [isUploading, setIsUploading] = useState(false);
+  const [saveLectures] = useSaveLectureToCourseMutation();
+
+  const handleVideoUpload = async (file: File) => {
+    if (!courseId || !file) {
+      toast.error("Course ID or file is missing.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("video", file);
+    formData.append("courseId", courseId);
+
+    setIsUploading(true);
+
     try {
-      console.log(data);
-      //await saveLectures({ courseId, lectures: [data] }).unwrap();
+      const response = await uploadVideo(formData).unwrap();
+      const { videoUrl, publicId, duration } = response;
+
+      setValue("videoInfo.videoUrl", videoUrl);
+      setValue("videoInfo.publicId", publicId);
+      setValue("duration", duration);
+
+      toast.success("Video uploaded successfully!");
+    } catch (error) {
+      console.error("Failed to upload video:", error);
+      toast.error("Failed to upload video. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleVideoUpload(file);
+    }
+  };
+
+  const onSubmit: SubmitHandler<LectureFormData> = async (data) => {
+    if (!courseId) {
+      toast.error("Course ID is missing.");
+      return;
+    }
+
+    const payload = {
+      lectureTitle: data.lectureTitle,
+      videoInfo: {
+        videoUrl: data.videoInfo.videoUrl,
+        publicId: data.videoInfo.publicId,
+      },
+      duration: data.duration,
+      isPreviewFree: data.isPreviewFree,
+    };
+
+    console.log("Form data being submitted:", payload); // Log the payload
+
+    try {
+      await saveLectures({ courseId, lectures: [payload] }).unwrap();
       toast.success("Lecture saved successfully!");
     } catch (error) {
-      toast.error("Failed to save lecture. Please try again.");
       console.error("Error saving lecture:", error);
+      toast.error("Failed to save lecture. Please try again.");
     }
   };
 
@@ -69,12 +141,21 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
           </label>
           <input
             type="file"
-            {...register("videoFile")}
+            {...register("videoInfo.videoUrl", {
+              required: "Video file is required",
+            })}
+            onChange={handleFileChange}
             className="w-full p-2 bg-gray-700 text-white rounded"
             accept="video/*"
+            disabled={isUploading}
           />
-          {errors.videoFile && (
-            <p className="text-red-500 text-sm">{errors.videoFile.message}</p>
+          {errors.videoInfo?.videoUrl && (
+            <p className="text-red-500 text-sm">
+              {errors.videoInfo?.videoUrl.message}
+            </p>
+          )}
+          {isUploading && (
+            <p className="text-blue-500 text-sm">Uploading video...</p>
           )}
         </div>
 
@@ -88,6 +169,7 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
             {...register("duration")}
             className="w-full p-2 bg-gray-700 text-white rounded"
             placeholder="Enter duration"
+            disabled
           />
           {errors.duration && (
             <p className="text-red-500 text-sm">{errors.duration.message}</p>
@@ -101,12 +183,15 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
           </label>
           <input
             type="text"
-            {...register("publicId")}
+            {...register("videoInfo.publicId")}
             className="w-full p-2 bg-gray-700 text-white rounded"
             placeholder="Enter public ID"
+            disabled
           />
-          {errors.publicId && (
-            <p className="text-red-500 text-sm">{errors.publicId.message}</p>
+          {errors.videoInfo?.publicId && (
+            <p className="text-red-500 text-sm">
+              {errors.videoInfo?.publicId.message}
+            </p>
           )}
         </div>
 
@@ -131,6 +216,7 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
         <button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          disabled={isUploading}
         >
           Save Lecture
         </button>
