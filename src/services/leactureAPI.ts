@@ -1,12 +1,9 @@
 import { apiGateway } from "./apiGateway";
 import { LECTURE_ACTIONS, METHOD } from "../page/constants";
-import { Lecture } from "../types/AddCourse";
 
 // Define the response interface for the video upload
 interface UploadVideoResponse {
   videoUrl: string;
-  publicId: string;
-  duration: number;
 }
 
 // Define the request interface for the video upload
@@ -15,10 +12,15 @@ export interface UploadVideoRequest {
   courseId: string;
 }
 
+interface CreateLecture {
+  lectureTitle: string; // Ensure it's always a string,
+  videoFile: string;
+  isPreviewFree: boolean;
+}
 // Define your types
 interface SaveLectureRequest {
   courseId: string;
-  lectures: Lecture[]; // Adjust this type based on your actual lecture data structure
+  lectures: CreateLecture[]; // Adjust this type based on your actual lecture data structure
 }
 
 interface SaveLectureResponse {
@@ -48,15 +50,19 @@ const lectureAPI = apiGateway.injectEndpoints({
       SaveLectureResponse,
       SaveLectureRequest
     >({
-      query: ({ courseId, lectures }) => ({
-        actionName: `${LECTURE_ACTIONS.LECTURES}/${courseId}`, // Include courseId in the URL
-        methodType: METHOD.POST,
-        body: lectures, // Send lectures in the body
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }),
+      query: ({ courseId, lectures }) => {
+        console.log("Sending request data:", JSON.stringify({ lectures }));
+
+        return {
+          actionName: `${LECTURE_ACTIONS.LECTURES}/${courseId}`, // Include courseId in the URL
+          methodType: METHOD.POST,
+          body: lectures,
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        };
+      },
     }),
   }),
 });
