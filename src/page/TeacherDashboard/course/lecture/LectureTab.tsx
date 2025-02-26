@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-toastify";
 import { useSaveLectureToCourseMutation } from "../../../../services/leactureAPI";
+import { Button } from "../../../../components/ui/button";
 
 interface LectureTabProps {
   courseId: string | null;
@@ -126,13 +127,13 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
         </div>
 
         {/* Save Lecture Button */}
-        <button
+        <Button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           disabled={isUploading}
         >
           Save Lecture
-        </button>
+        </Button>
       </form>
     </div>
   );

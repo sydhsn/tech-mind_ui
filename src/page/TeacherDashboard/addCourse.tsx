@@ -7,6 +7,7 @@ import {
 import LectureTab from "./course/lecture/LectureTab";
 import CourseTab from "./course/CourseTab";
 import { useAuth } from "../../components/AuthProvider";
+import { Button } from "../../components/ui/button";
 
 interface AddCourseProps {
   id?: string | null;
@@ -58,7 +59,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
       {/* Tabs for Course and Lectures */}
       <div className="flex space-x-4 mb-6">
-        <button
+        <Button
           className={`px-4 py-2 rounded ${
             activeTab === "course"
               ? "bg-blue-500 text-white"
@@ -67,8 +68,8 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
           onClick={() => setActiveTab("course")}
         >
           Course Details
-        </button>
-        <button
+        </Button>
+        <Button
           className={`px-4 py-2 rounded ${
             activeTab === "lectures"
               ? "bg-blue-500 text-white"
@@ -78,7 +79,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
           disabled={!courseId} // Disable Lecture Tab if course is not saved
         >
           Lectures
-        </button>
+        </Button>
       </div>
 
       {/* Render Active Tab */}

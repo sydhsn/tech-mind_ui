@@ -7,6 +7,7 @@ import { useAuth } from "../../../components/AuthProvider";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "./react-quill.scss";
+import { Button } from "../../../components/ui/button";
 
 const modules = {
   toolbar: [
@@ -245,12 +246,12 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
         </div>
 
         {/* Save/Update Course Button */}
-        <button
+        <Button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           {isEditing ? "Update Course" : "Save Course"}
-        </button>
+        </Button>
       </form>
     </div>
   );
