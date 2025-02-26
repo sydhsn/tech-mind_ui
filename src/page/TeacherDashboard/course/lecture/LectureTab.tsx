@@ -12,13 +12,19 @@ interface LectureTabProps {
 interface LectureFormData {
   lectureTitle: string;
   isPreviewFree: boolean;
-  videoFile: string; // Allow null for better validation
+  videoFile?: any;
 }
 
 const lectureSchema = yup.object().shape({
   lectureTitle: yup.string().required("Lecture Title is required"),
   isPreviewFree: yup.boolean().default(false),
-  videoFile: yup.string().required("Video File is required"),
+  videoFile: yup
+    .mixed()
+    .nullable()
+    .test("file-or-undefined", "Video File is required", (value) => {
+      return value === undefined || value instanceof File;
+    })
+    .required("Video File is required"),
 });
 
 const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
@@ -32,7 +38,7 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
     defaultValues: {
       lectureTitle: "",
       isPreviewFree: false,
-      videoFile: "",
+      videoFile: undefined,
     },
   });
 
@@ -40,32 +46,35 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
   const [saveLectures] = useSaveLectureToCourseMutation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsUploading(true);
-    console.log(e.target.files);
     const file = e.target.files?.[0];
-    console.log(file);
 
     if (file) {
       console.log("Selected File:", file);
-      setValue("videoFile", file?.name ?? "", { shouldValidate: true }); // Store File object properly
+      setValue("videoFile", file, { shouldValidate: true }); // Store File object
     }
-
-    setIsUploading(false);
   };
 
   const onSubmit: SubmitHandler<LectureFormData> = async (data) => {
-    const payload = {
-      lectureTitle: data.lectureTitle.trim(),
-      videoFile: data.videoFile,
-      isPreviewFree: data.isPreviewFree,
-    };
+    if (!data.videoFile) {
+      toast.error("Please upload a video file.");
+      return;
+    }
 
-    console.log("Submitting Payload:", payload);
+    const formData = new FormData();
+    formData.append("lectureTitle", data.lectureTitle.trim()); // Correct key
+    formData.append("isPreviewFree", String(data.isPreviewFree)); // Convert boolean to string
+    formData.append("videoFile", data.videoFile); // Append the file directly
+
+    console.log("Submitting FormData:");
+
+    for (const pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
 
     try {
       await saveLectures({
         courseId: courseId ?? "",
-        lectures: [payload],
+        formData, // Send FormData directly
       }).unwrap();
       toast.success("Lecture saved successfully!");
     } catch (error) {
