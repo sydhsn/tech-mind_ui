@@ -35,6 +35,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
             creator: user?.id,
           },
         }).unwrap();
+        console.log(response);
         toast.success("Course updated successfully!");
       } else {
         // Create new course

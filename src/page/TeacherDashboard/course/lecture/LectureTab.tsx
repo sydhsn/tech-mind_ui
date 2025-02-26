@@ -73,10 +73,13 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
     }
 
     try {
+      setIsUploading(true);
       await saveLectures({
         courseId: courseId ?? "",
         formData, // Send FormData directly
       }).unwrap();
+      setIsUploading(false);
+      handleReset();
       toast.success("Lecture saved successfully!");
     } catch (error) {
       console.error("Error saving lecture:", error);
@@ -84,10 +87,20 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
     }
   };
 
+  const handleReset = () => {
+    setValue("lectureTitle", "");
+    setValue("isPreviewFree", false);
+    setValue("videoFile", null);
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Lectures</h2>
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        className="space-y-4"
+        onSubmit={handleSubmit(onSubmit)}
+        onReset={handleReset}
+      >
         {/* Lecture Title */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-white">
