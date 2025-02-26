@@ -4,6 +4,20 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import axios from "axios";
 import { useAuth } from "../../../components/AuthProvider";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import "./react-quill.scss";
+import { Button } from "../../../components/ui/button";
+
+const modules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["link", "image"],
+    ["clean"],
+  ],
+};
 
 interface CourseTabProps {
   courseId?: string;
@@ -25,6 +39,7 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
   const { user } = useAuth();
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isEditing] = useState<boolean>(!!courseId);
+  const [description, setDescription] = useState<string>("");
 
   const {
     register,
@@ -50,6 +65,7 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
           setValue("courseTitle", courseData.courseTitle);
           setValue("subTitle", courseData.subTitle);
           setValue("description", courseData.description);
+          setDescription(courseData.description); // Set the description state
           setValue("category", courseData.category);
           setValue("courseLevel", courseData.courseLevel);
           setValue("coursePrice", courseData.coursePrice);
@@ -64,10 +80,10 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
   }, [courseId, setValue]);
 
   const onSubmit: SubmitHandler<any> = (data) => {
-    // Include the uploaded thumbnail URL in the form data
+    console.log("submit", data);
     data.courseThumbnail = thumbnailUrl;
     data.creator = user?.id;
-    onSaveCourse(data); // Call the save/update course handler
+    onSaveCourse(data);
   };
 
   const handleThumbnailUpload = async (
@@ -85,13 +101,19 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
         );
 
         // Store the uploaded URL
-        setThumbnailUrl(response.data.secure_url);
-        setValue("courseThumbnail", response.data.secure_url); // Update form value
+        setThumbnailUrl(response.data);
+        setValue("courseThumbnail", response.data); // Update form value
         trigger("courseThumbnail"); // Revalidate the field
       } catch (error) {
         console.error("Upload failed:", error);
       }
     }
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setDescription(value);
+    setValue("description", value); // Update form value
+    trigger("description"); // Revalidate the field
   };
 
   return (
@@ -137,11 +159,13 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
           <label className="block text-sm font-medium text-white">
             Description
           </label>
-          <textarea
-            {...register("description")}
-            className="w-full p-2 bg-gray-700 text-white rounded"
+          <ReactQuill
+            value={description}
+            onChange={handleDescriptionChange}
+            className="bg-gray-700 text-white rounded"
             placeholder="Enter description"
-          ></textarea>
+            modules={modules} // Apply custom toolbar
+          />
           {errors.description && (
             <p className="text-red-500 text-sm">{errors.description.message}</p>
           )}
@@ -222,12 +246,12 @@ const CourseTab: React.FC<CourseTabProps> = ({ courseId, onSaveCourse }) => {
         </div>
 
         {/* Save/Update Course Button */}
-        <button
+        <Button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
           {isEditing ? "Update Course" : "Save Course"}
-        </button>
+        </Button>
       </form>
     </div>
   );

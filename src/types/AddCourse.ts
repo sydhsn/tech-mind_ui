@@ -33,9 +33,9 @@ export interface ICourse {
 
 // Define Lecture Interface
 export interface Lecture {
-  duration: string | number;
   lectureTitle: string;
-  videoUrl?: string;
-  publicId?: string;
-  isPreviewFree?: boolean;
+  videoFile: string;
+  duration: number;
+  publicId: string;
+  isPreviewFree: boolean;
 }

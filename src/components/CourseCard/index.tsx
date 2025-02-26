@@ -6,6 +6,14 @@ interface CourseCardProps {
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+  // Utility function to truncate text
+  const truncateText = (text: string, maxLength: number): string => {
+    if (text.length > maxLength) {
+      return text.substring(0, maxLength) + "...";
+    }
+    return text;
+  };
+
   return (
     <div className="bg-gray-700 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
       {/* Thumbnail */}
@@ -23,8 +31,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
       {/* Course Details */}
       <div className="p-4">
+        {/* Truncated Course Title */}
         <h3 className="text-lg font-semibold text-white">
-          {course.courseTitle}
+          {truncateText(course.courseTitle, 35)}{" "}
+          {/* Adjust maxLength as needed */}
         </h3>
         <p className="text-sm text-gray-400 mt-2">{course.subTitle}</p>
         <div className="mt-4 flex items-center justify-between">

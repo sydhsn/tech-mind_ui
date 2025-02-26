@@ -1,50 +1,106 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-/* import { useSaveLecturesMutation } from "../../services/courseAPI"; */
+import { toast } from "react-toastify";
+import { useSaveLectureToCourseMutation } from "../../../../services/leactureAPI";
+import { Button } from "../../../../components/ui/button";
 
 interface LectureTabProps {
-  courseId?: string | null;
+  courseId: string | null;
 }
 
-// Yup validation schema for lectures
+interface LectureFormData {
+  lectureTitle: string;
+  isPreviewFree: boolean;
+  videoFile?: any;
+}
+
 const lectureSchema = yup.object().shape({
   lectureTitle: yup.string().required("Lecture Title is required"),
-  videoFile: yup.mixed().required("Video File is required"),
-  duration: yup.number().required("Duration is required").min(0),
-  publicId: yup.string().required("Public ID is required"),
-  isPreviewFree: yup.boolean().required("Free Preview is required"),
+  isPreviewFree: yup.boolean().default(false),
+  videoFile: yup
+    .mixed()
+    .nullable()
+    .test("file-or-undefined", "Video File is required", (value) => {
+      return value === undefined || value instanceof File;
+    })
+    .required("Video File is required"),
 });
 
 const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
-  //const [saveLectures] = useSaveLecturesMutation();
-  console.log(courseId);
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
-  } = useForm({
-    resolver: yupResolver(lectureSchema),
+  } = useForm<LectureFormData>({
+    resolver: yupResolver<LectureFormData>(lectureSchema),
+    defaultValues: {
+      lectureTitle: "",
+      isPreviewFree: false,
+      videoFile: undefined,
+    },
   });
 
-  const onSubmit: SubmitHandler<any> = async (data) => {
+  const [isUploading, setIsUploading] = useState(false);
+  const [saveLectures] = useSaveLectureToCourseMutation();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (file) {
+      console.log("Selected File:", file);
+      setValue("videoFile", file, { shouldValidate: true }); // Store File object
+    }
+  };
+
+  const onSubmit: SubmitHandler<LectureFormData> = async (data) => {
+    if (!data.videoFile) {
+      toast.error("Please upload a video file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("lectureTitle", data.lectureTitle.trim()); // Correct key
+    formData.append("isPreviewFree", String(data.isPreviewFree)); // Convert boolean to string
+    formData.append("videoFile", data.videoFile); // Append the file directly
+
+    console.log("Submitting FormData:");
+
+    for (const pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
     try {
-      console.log(data);
-      //await saveLectures({ courseId, lectures: [data] }).unwrap();
+      setIsUploading(true);
+      await saveLectures({
+        courseId: courseId ?? "",
+        formData, // Send FormData directly
+      }).unwrap();
+      setIsUploading(false);
+      handleReset();
       toast.success("Lecture saved successfully!");
     } catch (error) {
-      toast.error("Failed to save lecture. Please try again.");
       console.error("Error saving lecture:", error);
+      toast.error("Failed to save lecture. Please try again.");
     }
+  };
+
+  const handleReset = () => {
+    setValue("lectureTitle", "");
+    setValue("isPreviewFree", false);
+    setValue("videoFile", null);
   };
 
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold">Lectures</h2>
-      <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        className="space-y-4"
+        onSubmit={handleSubmit(onSubmit)}
+        onReset={handleReset}
+      >
         {/* Lecture Title */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-white">
@@ -52,9 +108,9 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
           </label>
           <input
             type="text"
-            {...register("lectureTitle")}
             className="w-full p-2 bg-gray-700 text-white rounded"
             placeholder="Enter lecture title"
+            {...register("lectureTitle")}
           />
           {errors.lectureTitle && (
             <p className="text-red-500 text-sm">
@@ -63,82 +119,35 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
           )}
         </div>
 
-        {/* Video File */}
+        {/* Video Upload */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-white">
-            Video File
+            Upload Video
           </label>
           <input
             type="file"
-            {...register("videoFile")}
+            onChange={handleFileChange}
             className="w-full p-2 bg-gray-700 text-white rounded"
             accept="video/*"
+            disabled={isUploading}
           />
-          {errors.videoFile && (
-            <p className="text-red-500 text-sm">{errors.videoFile.message}</p>
-          )}
         </div>
 
-        {/* Duration */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Duration (seconds)
-          </label>
-          <input
-            type="number"
-            {...register("duration")}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            placeholder="Enter duration"
-          />
-          {errors.duration && (
-            <p className="text-red-500 text-sm">{errors.duration.message}</p>
-          )}
-        </div>
-
-        {/* Public ID */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Public ID
-          </label>
-          <input
-            type="text"
-            {...register("publicId")}
-            className="w-full p-2 bg-gray-700 text-white rounded"
-            placeholder="Enter public ID"
-          />
-          {errors.publicId && (
-            <p className="text-red-500 text-sm">{errors.publicId.message}</p>
-          )}
-        </div>
-
-        {/* Free Preview */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">
-            Free Preview
-          </label>
-          <input
-            type="checkbox"
-            {...register("isPreviewFree")}
-            className="w-4 h-4"
-          />
-          {errors.isPreviewFree && (
-            <p className="text-red-500 text-sm">
-              {errors.isPreviewFree.message}
-            </p>
-          )}
+        {/* Free Preview Toggle */}
+        <div className="flex items-center space-x-2">
+          <input type="checkbox" {...register("isPreviewFree")} />
+          <label className="text-sm font-medium text-white">Free Preview</label>
         </div>
 
         {/* Save Lecture Button */}
-        <button
+        <Button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          disabled={isUploading}
         >
           Save Lecture
-        </button>
+        </Button>
       </form>
-
-      {/* Toast Container */}
-      <ToastContainer />
     </div>
   );
 };

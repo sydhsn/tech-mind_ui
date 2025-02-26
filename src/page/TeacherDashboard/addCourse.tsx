@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import {
   useCreateCourseMutation,
   useUpdateCourseMutation,
 } from "../../services/courseAPI";
 import LectureTab from "./course/lecture/LectureTab";
 import CourseTab from "./course/CourseTab";
+import { useAuth } from "../../components/AuthProvider";
+import { Button } from "../../components/ui/button";
 
 interface AddCourseProps {
   id?: string | null;
 }
 
 const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
+  const { user } = useAuth();
   const [courseId, setCourseId] = useState<string | null>(id || null);
   const [activeTab, setActiveTab] = useState<"course" | "lectures">(
     id ? "course" : "course" // Default to "course" tab
@@ -28,9 +30,12 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
         // Update existing course
         const response = await updateCourse({
           id: courseId,
-          ...courseData,
+          course: {
+            ...courseData,
+            creator: user?.id,
+          },
         }).unwrap();
-        console.log("update response", response);
+        console.log(response);
         toast.success("Course updated successfully!");
       } else {
         // Create new course
@@ -55,7 +60,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
       {/* Tabs for Course and Lectures */}
       <div className="flex space-x-4 mb-6">
-        <button
+        <Button
           className={`px-4 py-2 rounded ${
             activeTab === "course"
               ? "bg-blue-500 text-white"
@@ -64,8 +69,8 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
           onClick={() => setActiveTab("course")}
         >
           Course Details
-        </button>
-        <button
+        </Button>
+        <Button
           className={`px-4 py-2 rounded ${
             activeTab === "lectures"
               ? "bg-blue-500 text-white"
@@ -75,7 +80,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
           disabled={!courseId} // Disable Lecture Tab if course is not saved
         >
           Lectures
-        </button>
+        </Button>
       </div>
 
       {/* Render Active Tab */}
@@ -86,9 +91,6 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
         />
       )}
       {activeTab === "lectures" && <LectureTab courseId={courseId} />}
-
-      {/* Toast Container */}
-      <ToastContainer />
     </div>
   );
 };
