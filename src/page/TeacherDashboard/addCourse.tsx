@@ -8,17 +8,15 @@ import LectureTab from "./course/lecture/LectureTab";
 import CourseTab from "./course/CourseTab";
 import { useAuth } from "../../components/AuthProvider";
 import { Button } from "../../components/ui/button";
+import { useParams } from "react-router-dom";
 
-interface AddCourseProps {
-  id?: string | null;
-}
-
-const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
+const AddCourse: React.FC = () => {
+  const { courseId } = useParams<{ courseId?: string }>(); // Get courseId from URL
   const { user } = useAuth();
-  const [courseId, setCourseId] = useState<string | null>(id || null);
-  const [activeTab, setActiveTab] = useState<"course" | "lectures">(
-    id ? "course" : "course" // Default to "course" tab
+  const [currentCourseId, setCurrentCourseId] = useState<string | null>(
+    courseId || null
   );
+  const [activeTab, setActiveTab] = useState<"course" | "lectures">("course");
 
   const [createCourse] = useCreateCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
@@ -26,10 +24,10 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
   // Handle saving or updating the course
   const handleSaveCourse = async (courseData: any) => {
     try {
-      if (courseId) {
+      if (currentCourseId) {
         // Update existing course
         const response = await updateCourse({
-          id: courseId,
+          id: currentCourseId,
           course: {
             ...courseData,
             creator: user?.id,
@@ -40,8 +38,8 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
       } else {
         // Create new course
         const response = await createCourse(courseData).unwrap();
-        setCourseId(response?._id ?? ""); // Set the course ID after saving
-        setActiveTab("lectures"); // Switch to the Lecture Tab
+        setCurrentCourseId(response?._id ?? ""); // Set courseId after saving
+        setActiveTab("lectures"); // Switch to Lecture Tab
         toast.success("Course saved successfully!");
       }
     } catch (error) {
@@ -49,12 +47,13 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
     }
   };
 
-  // Set the active tab to "course" if editing an existing course
+  // Set courseId state if coming from edit mode
   useEffect(() => {
-    if (id) {
+    if (courseId) {
+      setCurrentCourseId(courseId);
       setActiveTab("course");
     }
-  }, [id]);
+  }, [courseId]);
 
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -77,7 +76,7 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
               : "bg-gray-700 text-gray-300 hover:bg-gray-600"
           }`}
           onClick={() => setActiveTab("lectures")}
-          disabled={!courseId} // Disable Lecture Tab if course is not saved
+          disabled={!currentCourseId} // Disable Lectures tab if course is not saved
         >
           Lectures
         </Button>
@@ -86,11 +85,11 @@ const AddCourse: React.FC<AddCourseProps> = ({ id }) => {
       {/* Render Active Tab */}
       {activeTab === "course" && (
         <CourseTab
-          courseId={courseId ?? undefined}
+          courseId={currentCourseId ?? undefined}
           onSaveCourse={handleSaveCourse}
         />
       )}
-      {activeTab === "lectures" && <LectureTab courseId={courseId} />}
+      {activeTab === "lectures" && <LectureTab courseId={currentCourseId} />}
     </div>
   );
 };

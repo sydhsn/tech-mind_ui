@@ -17,6 +17,12 @@ import { AuthProvider } from "./components/AuthProvider";
 import { RoleProtectedRoute } from "./components/ProtectedRoute";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import AddCourse from "./page/TeacherDashboard/addCourse";
+import Analytics from "./page/TeacherDashboard/Analytics";
+import MyCourses from "./page/TeacherDashboard/MyCourses";
+import SettingsPage from "./page/TeacherDashboard/Settings";
+import Students from "./page/TeacherDashboard/Students";
+import { EditCourseProvider } from "./components/editCourseContext";
 
 // Define routes using JSX
 const routes = createRoutesFromElements(
@@ -59,13 +65,31 @@ const routes = createRoutesFromElements(
     />
 
     <Route
-      path="teacher-dashboard/*"
+      path="teacher-dashboard"
       element={
         <RoleProtectedRoute allowedRoles={["teacher", "admin"]}>
-          <TeacherDashboard />
+          <EditCourseProvider>
+            <TeacherDashboard />
+          </EditCourseProvider>
         </RoleProtectedRoute>
       }
-    />
+    >
+      {/* Child Routes */}
+      <Route index element={<MyCourses />} />
+      <Route path="my-courses" element={<MyCourses />} />
+      <Route path="students" element={<Students />} />
+      <Route path="analytics" element={<Analytics />} />
+      <Route path="settings" element={<SettingsPage />} />
+      <Route path="add-course" element={<AddCourse />} />
+      <Route path="/teacher-dashboard/add-course" element={<AddCourse />} />
+      <Route
+        path="/teacher-dashboard/add-course/:courseId"
+        element={<AddCourse />}
+      />
+    </Route>
+
+    {/* Catch-All Route (Optional) */}
+    <Route path="*" element={<div>Page Not Found</div>} />
 
     <Route
       path="admin-dashboard"

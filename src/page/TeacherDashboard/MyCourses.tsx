@@ -3,14 +3,16 @@ import { useAuth } from "../../components/AuthProvider";
 import CourseCard from "../../components/CourseCard";
 import { useLazyGetMyCoursesQuery } from "../../services/courseAPI";
 import { ICourse } from "../../types/AddCourse";
+import { useDashboard } from "../../components/editCourseContext";
+import { PlusCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "../../components/ui/button";
 
-interface MyCoursesProps {
-  onEditCourse: (courseId: string) => void;
-}
-
-const MyCourses: React.FC<MyCoursesProps> = ({ onEditCourse }) => {
+const MyCourses: React.FC = () => {
   const { user } = useAuth();
   const [courses, setCourses] = React.useState<ICourse[]>([]);
+  const { editCourse } = useDashboard();
+  const navigate = useNavigate();
 
   // API call to get courses created by the teacher
   const [
@@ -43,10 +45,29 @@ const MyCourses: React.FC<MyCoursesProps> = ({ onEditCourse }) => {
     return null;
   };
 
+  const handleAddCourse = () => {
+    navigate("/teacher-dashboard/add-course");
+  };
+
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-      <h2 className="text-xl font-semibold text-white">My Courses</h2>
-      <p className="text-gray-400 mt-2">Manage your courses here.</p>
+      <div className="flex items-center justify-between mb-6">
+        {/* Left Section: Heading & Description */}
+        <div>
+          <h2 className="text-xl font-semibold text-white">My Courses</h2>
+          <p className="text-gray-400">Manage your courses here.</p>
+        </div>
+
+        {/* Right Section: Add Course Button */}
+        <Button
+          variant="outline"
+          onClick={handleAddCourse}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          <PlusCircle className="w-5 h-5 mr-2" />
+          Add Course
+        </Button>
+      </div>
 
       {/* Display error message if there's an error */}
       <>{error && <div className="text-red-500 mt-4">{renderError()}</div>}</>
@@ -62,7 +83,7 @@ const MyCourses: React.FC<MyCoursesProps> = ({ onEditCourse }) => {
           {courses.map((course) => (
             <div
               key={course._id}
-              onClick={() => onEditCourse(course._id!)}
+              onClick={() => editCourse(course._id!)}
               className="cursor-pointer"
             >
               <CourseCard course={course} />
