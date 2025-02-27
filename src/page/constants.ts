@@ -16,3 +16,7 @@ export const COURSE_ACTIONS = {
   CREATE_COURSE: "courses/create",
   GET_MY_COURSES: "courses/my-courses",
 } as const;
+
+export const LECTURE_ACTIONS = {
+  LECTURES: "lectures",
+};

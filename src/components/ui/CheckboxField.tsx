@@ -5,6 +5,7 @@ interface CheckboxFieldProps {
   name: string;
   checked: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
 const CheckboxField: React.FC<CheckboxFieldProps> = ({
@@ -12,17 +13,19 @@ const CheckboxField: React.FC<CheckboxFieldProps> = ({
   name,
   checked,
   onChange,
+  disabled = false,
 }) => {
   return (
-    <div>
-      <label className="block text-sm font-medium text-gray-300">{label}</label>
+    <div className="flex items-center space-x-2">
       <input
         type="checkbox"
         name={name}
         checked={checked}
         onChange={onChange}
-        className="mt-1"
+        disabled={disabled}
+        className="w-4 h-4"
       />
+      <label className="text-sm font-medium text-white">{label}</label>
     </div>
   );
 };

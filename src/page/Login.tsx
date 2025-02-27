@@ -4,6 +4,7 @@ import Logo from "../assets/logo.png";
 import { useNavigate } from "react-router-dom";
 import { useLoginMutation, useRegisterMutation } from "../services/authApi";
 import { useAuth } from "../components/AuthProvider";
+import { toast } from "react-toastify";
 
 const Login: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -35,6 +36,8 @@ const Login: React.FC = () => {
     if (data.isLogin) {
       if (data.email && data.password) {
         loginApiCall({ email: data.email, password: data.password });
+      } else {
+        toast.error("Please fill in all fields");
       }
     } else {
       if (data.name && data.email && data.password) {
@@ -43,27 +46,31 @@ const Login: React.FC = () => {
           email: data.email,
           password: data.password,
         });
+      } else {
+        toast.error("Please fill in all fields");
       }
     }
   };
 
   useEffect(() => {
     if (isLoginSuccess) {
-      console.log("Login data:", loginData);
       login(loginData);
+      toast.success("Login successful!");
       navigate("/");
     }
     if (isLoginError) {
-      console.log("Login error:", loginData);
+      toast.error("Login failed. Please check your credentials.");
       navigate("/login");
     }
   }, [loginData, isLoginSuccess, isLoginError, login, navigate]);
 
   useEffect(() => {
     if (isRegisterSuccess) {
+      toast.success("Registration successful! Please login.");
       setIsLogin(true);
     }
     if (isRegisterError) {
+      toast.error("Registration failed. Please try again.");
       setIsLogin(false);
     }
   }, [registerData, isRegisterSuccess, isRegisterError, regsterError]);
