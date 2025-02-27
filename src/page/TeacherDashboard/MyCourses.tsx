@@ -6,12 +6,12 @@ import { ICourse } from "../../types/AddCourse";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
-import { useDashboard } from "../../components/editCourseContext";
+import { useEditCourse } from "../../components/editCourseContext";
 
 const MyCourses: React.FC = () => {
   const { user } = useAuth();
   const [courses, setCourses] = React.useState<ICourse[]>([]);
-  const { editCourse } = useDashboard();
+  const { editCourse } = useEditCourse();
   const navigate = useNavigate();
 
   // API call to get courses created by the teacher

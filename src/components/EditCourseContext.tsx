@@ -1,11 +1,11 @@
 import React, { createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
-interface DashboardContextType {
+interface EditCourseContextType {
   editCourse: (courseId: string) => void;
 }
 
-const EditCourseContext = createContext<DashboardContextType | undefined>(
+const EditCourseContext = createContext<EditCourseContextType | undefined>(
   undefined
 );
 
@@ -25,9 +25,10 @@ export const EditCourseProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useDashboard = () => {
+export const useEditCourse = () => {
   const context = useContext(EditCourseContext);
-  if (!context)
-    throw new Error("useDashboard must be used within DashboardProvider");
+  if (!context) {
+    throw new Error("useEditCourse must be used within an EditCourseProvider");
+  }
   return context;
 };
