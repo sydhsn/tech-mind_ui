@@ -3,10 +3,10 @@ import { useAuth } from "../../components/AuthProvider";
 import CourseCard from "../../components/CourseCard";
 import { useLazyGetMyCoursesQuery } from "../../services/courseAPI";
 import { ICourse } from "../../types/AddCourse";
-import { useDashboard } from "../../components/editCourseContext";
 import { PlusCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui/button";
+import { useDashboard } from "../../components/editCourseContext";
 
 const MyCourses: React.FC = () => {
   const { user } = useAuth();
