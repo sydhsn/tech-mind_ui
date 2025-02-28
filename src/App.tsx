@@ -111,7 +111,6 @@ function App() {
   return (
     <AuthProvider>
       <RouterProvider router={appRouter} />
-      {/* Toast Container */}
       <ToastContainer />
     </AuthProvider>
   );
