@@ -22,7 +22,7 @@ import Analytics from "./page/TeacherDashboard/Analytics";
 import MyCourses from "./page/TeacherDashboard/MyCourses";
 import SettingsPage from "./page/TeacherDashboard/Settings";
 import Students from "./page/TeacherDashboard/Students";
-import { EditCourseProvider } from "./components/editCourseContext";
+import { EditCourseProvider } from "./Context/editCourseContext";
 
 // Define routes using JSX
 const routes = createRoutesFromElements(
@@ -111,7 +111,6 @@ function App() {
   return (
     <AuthProvider>
       <RouterProvider router={appRouter} />
-      {/* Toast Container */}
       <ToastContainer />
     </AuthProvider>
   );
