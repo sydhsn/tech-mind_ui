@@ -92,6 +92,7 @@ export default function Profile() {
     }
   }, [profile, updateUser, user, setUser]);
 
+  // Handle successful profile update
   useEffect(() => {
     if (isProfileSuccess) {
       toast.success("Profile updated successfully");
@@ -103,11 +104,15 @@ export default function Profile() {
       }));
       setEditMode(false);
     }
+  }, [isProfileSuccess, user]);
+
+  // Handle profile update errors
+  useEffect(() => {
     if (updateError) {
       toast.error("Profile update failed");
       console.error("Profile update error:", updateErrorDetails);
     }
-  }, [isProfileSuccess, updateError, updateErrorDetails, user]);
+  }, [updateError, updateErrorDetails]);
 
   const profilePhotoSrc = editMode
     ? profile.previewPhoto || profile.profilePhoto
