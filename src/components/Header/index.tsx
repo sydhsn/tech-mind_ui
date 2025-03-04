@@ -26,7 +26,6 @@ export default function Header() {
 
   const navLinks = [
     { href: "/", label: "Home" },
-    { href: "/courses", label: "Courses" },
     { href: "/about", label: "About" },
     ...(isAuthenticated && user?.role
       ? [{ href: dashboardPath, label: "Dashboard" }]
