@@ -22,7 +22,11 @@ import Analytics from "./page/TeacherDashboard/Analytics";
 import MyCourses from "./page/TeacherDashboard/MyCourses";
 import SettingsPage from "./page/TeacherDashboard/Settings";
 import Students from "./page/TeacherDashboard/Students";
+
 import { EditCourseProvider } from "./Context/editCourseContext";
+import PageNotFound from "./page/PageNotFound";
+import AboutPage from "./page/AboutPage";
+import CourseDetailsPage from "./page/CourseDetailsPage";
 
 // Define routes using JSX
 const routes = createRoutesFromElements(
@@ -89,7 +93,7 @@ const routes = createRoutesFromElements(
     </Route>
 
     {/* Catch-All Route (Optional) */}
-    <Route path="*" element={<div>Page Not Found</div>} />
+    <Route path="*" element={<PageNotFound />} />
 
     <Route
       path="admin-dashboard"
@@ -101,6 +105,8 @@ const routes = createRoutesFromElements(
     />
 
     <Route path="login" element={<Login />} />
+    <Route path="about" element={<AboutPage />} />
+    <Route path="/course-details/:courseId" element={<CourseDetailsPage />} />
   </Route>
 );
 

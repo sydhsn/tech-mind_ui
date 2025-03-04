@@ -64,15 +64,22 @@ const courseAPI = apiGateway.injectEndpoints({
         creator: string;
       }
     >({
-      query: ({ courseId, creator }) => (
-        console.log("courseId", courseId),
-        console.log("creator", creator),
-        {
-          actionName: `${COURSE_ACTIONS.COURSE_BY_ID}/publish/${courseId}`,
-          methodType: METHOD.PUT,
-          body: { creator },
-        }
-      ),
+      query: ({ courseId, creator }) => ({
+        actionName: `${COURSE_ACTIONS.COURSE_BY_ID}/publish/${courseId}`,
+        methodType: METHOD.PUT,
+        body: { creator },
+      }),
+    }),
+
+    // Get all published courses
+    getAllPublishedCourses: build.query<ICourse[], void>({
+      query: () => ({
+        actionName: `${COURSE_ACTIONS.COURSE_BY_ID}/all-published-courses`, // Ensure correct endpoint
+        methodType: METHOD.GET,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
     }),
   }),
 });
@@ -85,4 +92,5 @@ export const {
   useUpdateCourseMutation,
   useSaveLecturesMutation,
   usePublishCourseMutation,
+  useLazyGetAllPublishedCoursesQuery,
 } = courseAPI;
