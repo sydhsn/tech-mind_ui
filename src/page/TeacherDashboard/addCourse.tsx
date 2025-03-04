@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import {
   useCreateCourseMutation,
+  usePublishCourseMutation,
   useUpdateCourseMutation,
 } from "../../services/courseAPI";
 import LectureTab from "./course/lecture/LectureTab";
@@ -9,6 +10,7 @@ import CourseTab from "./course/CourseTab";
 import { useAuth } from "../../components/AuthProvider";
 import { Button } from "../../components/ui/button";
 import { useParams } from "react-router-dom";
+import { useLazyCheckCourseHasLectureQuery } from "@/services/leactureAPI";
 
 const AddCourse: React.FC = () => {
   const { courseId } = useParams<{ courseId?: string }>(); // Get courseId from URL
@@ -17,9 +19,12 @@ const AddCourse: React.FC = () => {
     courseId || null
   );
   const [activeTab, setActiveTab] = useState<"course" | "lectures">("course");
+  const [hasLectures, setHasLectures] = useState(false);
 
   const [createCourse] = useCreateCourseMutation();
   const [updateCourse] = useUpdateCourseMutation();
+  const [checkHasLecture] = useLazyCheckCourseHasLectureQuery();
+  const [publishCourse] = usePublishCourseMutation();
 
   // Handle saving or updating the course
   const handleSaveCourse = async (courseData: any) => {
@@ -55,6 +60,41 @@ const AddCourse: React.FC = () => {
     }
   }, [courseId]);
 
+  // Fetch if course has lectures
+  useEffect(() => {
+    if (currentCourseId) {
+      checkHasLecture(currentCourseId)
+        .unwrap()
+        .then((response) => {
+          setHasLectures(response.hasLectures);
+        })
+        .catch((error) => {
+          console.error("Error checking lectures:", error);
+        });
+    }
+  }, [currentCourseId]);
+
+  // handle publish course
+  const handlePublishCourse = () => {
+    if (!currentCourseId) return;
+    if (!user) {
+      toast.error("Please login to publish the course.");
+      return;
+    }
+    publishCourse({
+      courseId: currentCourseId,
+      creator: user?.id ?? "",
+    })
+      .unwrap()
+      .then(() => {
+        toast.success("Course published successfully!");
+      })
+      .catch((error) => {
+        console.error("Error publishing course:", error);
+        toast.error("Failed to publish course. Please try again.");
+      });
+  };
+
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
       {/* Tabs for Course and Lectures */}
@@ -80,6 +120,11 @@ const AddCourse: React.FC = () => {
         >
           Lectures
         </Button>
+        {hasLectures && (
+          <div className="ml-auto">
+            <Button onClick={handlePublishCourse}>Publish Course</Button>
+          </div>
+        )}
       </div>
 
       {/* Render Active Tab */}

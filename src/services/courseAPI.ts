@@ -55,6 +55,25 @@ const courseAPI = apiGateway.injectEndpoints({
         body: lectures,
       }),
     }),
+
+    // publish course by id
+    publishCourse: build.mutation<
+      void,
+      {
+        courseId: string;
+        creator: string;
+      }
+    >({
+      query: ({ courseId, creator }) => (
+        console.log("courseId", courseId),
+        console.log("creator", creator),
+        {
+          actionName: `${COURSE_ACTIONS.COURSE_BY_ID}/publish/${courseId}`,
+          methodType: METHOD.PUT,
+          body: { creator },
+        }
+      ),
+    }),
   }),
 });
 
@@ -65,4 +84,5 @@ export const {
   useLazyFindCourseByIdQuery,
   useUpdateCourseMutation,
   useSaveLecturesMutation,
+  usePublishCourseMutation,
 } = courseAPI;

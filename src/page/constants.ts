@@ -19,4 +19,5 @@ export const COURSE_ACTIONS = {
 
 export const LECTURE_ACTIONS = {
   LECTURES: "lectures",
+  //COUSRE_HAS_LECTURE: "lectures/:courseId/has-lectures",
 };

@@ -7,9 +7,11 @@ export interface ButtonProps
   asChild?: boolean;
   variant?: "ghost" | "primary" | "outline";
 }
-
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", asChild = false, ...props }, ref) => {
+  (
+    { className, variant = "primary", asChild = false, disabled, ...props },
+    ref
+  ) => {
     const Comp = asChild ? Slot : "button";
 
     // Define base styles
@@ -24,10 +26,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ghost: "text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
     };
 
+    // Define disabled styles
+    const disabledStyles = "opacity-50 cursor-not-allowed bg-gray-300";
+
     return (
       <Comp
         ref={ref}
-        className={cn(baseStyles, variantStyles[variant], className)}
+        className={cn(
+          baseStyles,
+          variantStyles[variant],
+          disabled && disabledStyles,
+          className
+        )}
+        disabled={disabled}
         {...props}
       />
     );

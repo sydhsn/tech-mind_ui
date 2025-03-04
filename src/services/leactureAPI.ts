@@ -13,6 +13,10 @@ interface SaveLectureResponse {
   data?: any;
 }
 
+interface HasLectureResponse {
+  hasLectures: true;
+}
+
 const lectureAPI = apiGateway.injectEndpoints({
   endpoints: (build) => ({
     // Save lecture to course mutation
@@ -31,7 +35,18 @@ const lectureAPI = apiGateway.injectEndpoints({
         };
       },
     }),
+    checkCourseHasLecture: build.query<HasLectureResponse, string>({
+      query: (courseId) => {
+        return {
+          actionName: `${LECTURE_ACTIONS.LECTURES}/${courseId}/has-lectures`,
+          methodType: METHOD.GET,
+        };
+      },
+    }),
   }),
 });
 
-export const { useSaveLectureToCourseMutation } = lectureAPI;
+export const {
+  useSaveLectureToCourseMutation,
+  useLazyCheckCourseHasLectureQuery,
+} = lectureAPI;
