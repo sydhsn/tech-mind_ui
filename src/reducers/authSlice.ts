@@ -5,6 +5,8 @@ interface User {
   name: string;
   email: string;
   role: string;
+  bio?: string;
+  profilePhoto?: string;
 }
 
 interface AuthState {
@@ -14,8 +16,18 @@ interface AuthState {
   isAuthenticated: boolean;
 }
 
+const getStoredItem = (key: string, defaultValue: any) => {
+  try {
+    return JSON.parse(
+      localStorage.getItem(key) || JSON.stringify(defaultValue)
+    );
+  } catch {
+    return defaultValue;
+  }
+};
+
 const initialState: AuthState = {
-  user: JSON.parse(localStorage.getItem("user") || "null"), // Ensure valid JSON
+  user: getStoredItem("user", null),
   accessToken: localStorage.getItem("accessToken") || "",
   refreshToken: localStorage.getItem("refreshToken") || "",
   isAuthenticated: localStorage.getItem("isAuthenticated") === "true",
@@ -37,6 +49,7 @@ const authSlice = createSlice({
       state.accessToken = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
+
       localStorage.setItem("user", JSON.stringify(action.payload.user));
       localStorage.setItem("accessToken", action.payload.accessToken);
       localStorage.setItem("refreshToken", action.payload.refreshToken);
@@ -47,13 +60,18 @@ const authSlice = createSlice({
       state.accessToken = "";
       state.refreshToken = "";
       state.isAuthenticated = false;
+
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.setItem("isAuthenticated", "false");
     },
+    updateAccessToken: (state, action: PayloadAction<string>) => {
+      state.accessToken = action.payload;
+      localStorage.setItem("accessToken", action.payload);
+    },
   },
 });
 
-export const { login, logout } = authSlice.actions;
+export const { login, logout, updateAccessToken } = authSlice.actions;
 export default authSlice.reducer;

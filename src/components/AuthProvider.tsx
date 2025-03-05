@@ -9,31 +9,31 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user: authUser } = useSelector(
+  const { isAuthenticated, user } = useSelector(
     (state: RootState) => state.auth
   );
 
   // Local user state (if needed)
-  const [localUser, setLocalUser] = useState(authUser || null);
+  const [localUser, setLocalUser] = useState(user || null);
 
   const handleLogin = (userData: any) => {
     dispatch(login(userData));
-    setLocalUser(userData); // Update local user state if needed
+    setLocalUser(userData);
   };
 
   const handleLogout = () => {
     dispatch(logout());
-    setLocalUser(null); // Clear local user state if needed
+    setLocalUser(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user: localUser || authUser, // Use localUser if available, otherwise fallback to authUser
+        user: localUser || user,
         isAuthenticated,
         login: handleLogin,
         logout: handleLogout,
-        setUser: setLocalUser, // Provide setUser function for local updates
+        setUser: setLocalUser,
       }}
     >
       {children}

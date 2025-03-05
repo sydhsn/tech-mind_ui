@@ -7,7 +7,7 @@ interface LoginCredentials {
 }
 
 interface RegisterCredentials {
-  name: string;
+  name: string | null;
   email: string;
   password: string;
 }
@@ -20,7 +20,7 @@ interface User {
 }
 
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
   refreshToken: string;
   user: User;
 }
