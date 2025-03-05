@@ -4,7 +4,7 @@ import { jwtDecode } from "jwt-decode";
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 // Function to get the access token from local storage
-const getAccessToken = () => localStorage.getItem("token");
+const getAccessToken = () => localStorage.getItem("accessToken");
 
 // Function to get the refresh token from local storage
 const getRefreshToken = () => localStorage.getItem("refreshToken");
@@ -33,13 +33,13 @@ const refreshAccessToken = async () => {
     const { accessToken, refreshToken: newRefreshToken } = response.data;
 
     // Store new tokens
-    localStorage.setItem("token", accessToken);
+    localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
 
     return accessToken;
   } catch (error) {
     console.error("Failed to refresh token", error);
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     return null;
   }

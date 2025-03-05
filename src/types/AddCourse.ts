@@ -29,6 +29,8 @@ export interface ICourse {
   isPublished?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  videoUrl?: string;
+  publishedAt?: string;
 }
 
 // Define Lecture Interface
