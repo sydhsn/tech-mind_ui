@@ -91,7 +91,7 @@ const CourseDetailsPage: React.FC = () => {
 
       // Step 2: Open Razorpay payment modal
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID as string,
+        key: import.meta.env.RAZORPAY_KEY_ID as string,
         amount,
         currency,
         name: "Course Purchase",
