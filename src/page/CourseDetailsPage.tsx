@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 import { faker } from "@faker-js/faker";
 import { useLazyFindPubishedCourseByIdQuery } from "@/services/courseAPI";
@@ -10,6 +10,7 @@ import {
   useConfirmPaymentMutation,
   useGetCreateOrderMutation,
 } from "@/services/paymentAPI";
+import { toast } from "react-toastify";
 
 declare global {
   interface Window {
@@ -47,100 +48,80 @@ const CourseDetailsPage: React.FC = () => {
   const [getCourseDetails, { data: courseData, isSuccess }] =
     useLazyFindPubishedCourseByIdQuery();
 
-  const [
-    createOrder,
-    { data: orderResponse, isSuccess: isOrderSuccess, error: orderError },
-  ] = useGetCreateOrderMutation();
-  const [
-    confirmPayment,
-    {
-      error: confirmPaymentError,
-      isSuccess: isConfirmPaymentSuccess,
-      data: confirmPaymentData,
-    },
-  ] = useConfirmPaymentMutation();
+  const [createOrder] = useGetCreateOrderMutation();
+  const [confirmPayment] = useConfirmPaymentMutation();
 
+  // Fetch course details when the component mounts
   useEffect(() => {
     if (courseId) {
       getCourseDetails(courseId);
     }
   }, [courseId]);
 
+  // Update course state when data is fetched
   useEffect(() => {
     if (isSuccess) {
       setCourse(courseData);
     }
   }, [isSuccess, courseData]);
 
-  const handleEnroll = async ({
-    courseId,
-    userId,
-    coursePrice,
-  }: {
-    courseId: string;
-    userId: string;
-    coursePrice: number;
-  }) => {
-    if (!userId) {
-      console.error("User ID is missing");
-      alert("Please log in to enroll in the course.");
+  // Handle enrollment and payment
+  const handleEnroll = async () => {
+    if (!user) {
+      toast.error("Please log in to enroll in the course.");
+      return;
+    }
+
+    if (!courseId || !course?.coursePrice) {
+      toast.error("Course ID or price is missing");
       return;
     }
 
     const courseDetails = {
-      courseId: courseId ?? "",
-      userId: userId ?? "",
-      amount: coursePrice ?? 0,
+      courseId,
+      userId: user.id,
+      amount: course.coursePrice,
       currency: "INR",
     };
 
     try {
-      await createOrder(courseDetails).unwrap();
-    } catch (error) {
-      console.error("Error during payment process:", error);
-    }
-  };
+      // Step 1: Create a Razorpay order
+      const orderResponse = await createOrder(courseDetails).unwrap();
+      const { orderId, amount, currency } = orderResponse;
 
-  useEffect(() => {
-    if (isOrderSuccess) {
-      const { orderId, amount, currency } = orderResponse?.data ?? {};
-
+      // Step 2: Open Razorpay payment modal
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID as string,
-        amount: amount,
-        currency: currency,
+        amount,
+        currency,
         name: "Course Purchase",
         description: "Course Enrollment",
         order_id: orderId,
-        handler: async (response: { razorpay_payment_id?: string }) => {
-          await confirmPayment({
-            paymentId: response.razorpay_payment_id ?? "",
-          }).unwrap();
+        handler: async (response: any) => {
+          try {
+            const confirmPayload = {
+              paymentId: response.razorpay_payment_id ?? "",
+              razorpayOrderId: response.razorpay_order_id ?? "", // Ensure this is included
+            };
+
+            await confirmPayment(confirmPayload).unwrap();
+            toast.success(
+              "Payment successful! You are now enrolled in the course."
+            );
+          } catch (error) {
+            console.error("Payment confirmation failed:", error);
+            toast.error("Payment confirmation failed. Please contact support.");
+          }
         },
       };
+
       const razorpay = new window.Razorpay(options);
       razorpay.open();
+    } catch (error) {
+      console.error("Error during payment process:", error);
+      toast.error("Failed to create payment order. Please try again.");
     }
-  }, [isOrderSuccess, orderResponse]);
-
-  useEffect(() => {
-    if (isConfirmPaymentSuccess) {
-      alert("Payment successful! You are now enrolled in the course.");
-      console.log("Payment successful", confirmPaymentData);
-    }
-  }, [isConfirmPaymentSuccess]);
-
-  useEffect(() => {
-    if (orderError) {
-      console.error("Error during payment process:", orderError);
-    }
-  }, [orderError]);
-
-  useEffect(() => {
-    if (confirmPaymentError) {
-      console.error("Error during payment confirmation:", confirmPaymentError);
-    }
-  }, [confirmPaymentError]);
+  };
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -160,17 +141,7 @@ const CourseDetailsPage: React.FC = () => {
               <p className="text-gray-300 mb-6">Created by {instructor.name}</p>
               <div className="flex space-x-4">
                 <Button
-                  onClick={() => {
-                    if (!user) {
-                      alert("Please log in to enroll in the course.");
-                      return;
-                    }
-                    handleEnroll({
-                      courseId: course?._id ?? "",
-                      userId: user?.id ?? "",
-                      coursePrice: course?.coursePrice ?? 0,
-                    });
-                  }}
+                  onClick={handleEnroll}
                   className="bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-all"
                 >
                   Enroll Now
@@ -185,11 +156,11 @@ const CourseDetailsPage: React.FC = () => {
               <div className="relative w-full h-64 bg-gray-700 rounded-lg overflow-hidden shadow-2xl">
                 {course?.videoUrl ? (
                   <ReactPlayer
-                    url={course?.videoUrl ?? ""}
+                    url={course.videoUrl}
                     width="100%"
                     height="100%"
                     controls={true}
-                    light={course?.courseThumbnail ?? ""}
+                    light={course.courseThumbnail}
                     playing={false}
                     className="react-player"
                   />
