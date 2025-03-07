@@ -28,7 +28,7 @@ const StudentDashboard: React.FC = () => {
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [currentLectureIndex, setCurrentLectureIndex] = useState(0);
   const [playedSeconds, setPlayedSeconds] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true); // Start playing by default
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [completedLectures, setCompletedLectures] = useState<Set<string>>(
@@ -64,16 +64,21 @@ const StudentDashboard: React.FC = () => {
   }, [courseId]);
 
   // Handle video save progress
-  const handleProgress = (state: ProgressState) => {
+  const handleProgress = async (state: ProgressState) => {
     setPlayedSeconds(state.playedSeconds);
     const currentLecture = lectures[currentLectureIndex];
     if (courseId && user?.id && currentLecture) {
-      saveUserProgress({
-        userId: user?.id,
-        courseId,
-        lectureId: currentLecture._id,
-        playedSeconds: state.playedSeconds,
-      }).unwrap();
+      try {
+        await saveUserProgress({
+          userId: user?.id,
+          courseId,
+          lectureId: currentLecture._id,
+          playedSeconds: state.playedSeconds,
+        }).unwrap();
+      } catch (err) {
+        toast.error("Failed to save progress. Please try again.");
+        console.error("Progress save error:", err);
+      }
     }
   };
 
@@ -150,6 +155,15 @@ const StudentDashboard: React.FC = () => {
     );
   }
 
+  const videoUrl = lectures[currentLectureIndex]?.videoInfo?.videoUrl;
+  if (!videoUrl) {
+    return (
+      <div className="text-center text-white">
+        Video URL is missing or invalid.
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
@@ -164,7 +178,7 @@ const StudentDashboard: React.FC = () => {
               <div className="relative">
                 <ReactPlayer
                   ref={playerRef}
-                  url={lectures[currentLectureIndex].videoInfo.videoUrl}
+                  url={videoUrl}
                   playing={isPlaying}
                   onProgress={handleProgress}
                   controls={false} // Hide default controls
@@ -177,6 +191,12 @@ const StudentDashboard: React.FC = () => {
                         disablePictureInPicture: true, // Disable picture-in-picture
                       },
                     },
+                  }}
+                  onError={(err) => {
+                    toast.error(
+                      "Failed to load the video. Please check the URL."
+                    );
+                    console.error("Video error:", err);
                   }}
                 />
                 {/* Custom Controls */}

@@ -31,6 +31,21 @@ interface SaveProgressResponse {
   data?: any;
 }
 
+// Define the type for get user progress request
+interface GetUserProgressRequest {
+  userId: string;
+  courseId: string;
+}
+
+interface ProgressItem {
+  lectureId: string;
+  playedSeconds: number;
+}
+
+interface GetUserProgressResponse {
+  progress: ProgressItem[] | undefined;
+}
+
 const lectureAPI = apiGateway.injectEndpoints({
   endpoints: (build) => ({
     // Save lecture to course mutation
@@ -74,12 +89,25 @@ const lectureAPI = apiGateway.injectEndpoints({
     saveProgress: build.mutation<SaveProgressResponse, SaveProgressRequest>({
       query: (progressData) => {
         return {
-          actionName: `${PROGRESS_ACTIONS.SAVE_PROGRESS}/progress`,
+          actionName: `${PROGRESS_ACTIONS.SAVE_PROGRESS}`,
           methodType: METHOD.POST,
           body: progressData,
           headers: {
             "Content-Type": "application/json",
           },
+        };
+      },
+    }),
+
+    // Get user progress query
+    getUserProgress: build.query<
+      GetUserProgressResponse,
+      GetUserProgressRequest
+    >({
+      query: ({ userId, courseId }) => {
+        return {
+          actionName: `${PROGRESS_ACTIONS.SAVE_PROGRESS}/${userId}/${courseId}`,
+          methodType: METHOD.GET,
         };
       },
     }),
@@ -91,4 +119,5 @@ export const {
   useLazyCheckCourseHasLectureQuery,
   useLazyGetLecturesByCourseIdQuery,
   useSaveProgressMutation,
+  useGetUserProgressQuery, // Add this query
 } = lectureAPI;

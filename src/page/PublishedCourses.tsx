@@ -41,7 +41,7 @@ export default function PublishedCourses() {
 
   // handle course details page by course id
   const handleCousreDetails = (courseId: string) => () => {
-    navigate(`/course-details/${courseId}`);
+    navigate(`/home/course-details/${courseId}`);
   };
 
   return (

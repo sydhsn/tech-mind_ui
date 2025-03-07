@@ -25,7 +25,7 @@ const TeacherDashboard: React.FC = () => {
   ];
 
   const handleMenuClick = (key: string) => {
-    navigate(`/teacher-dashboard/${key}`);
+    navigate(`/home/teacher-dashboard/${key}`);
   };
 
   return (

@@ -72,7 +72,7 @@ const CourseDetailsPage: React.FC = () => {
       toast.error("Course ID is missing");
       return;
     }
-    navigate(`/student-dashboard/${courseId}`);
+    navigate(`/home/student-dashboard/${courseId}`);
   };
 
   // Handle enrollment and payment

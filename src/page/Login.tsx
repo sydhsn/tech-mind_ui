@@ -48,10 +48,10 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     if (isLoginSuccess && loginData) {
-      localStorage.setItem("token", loginData.accessToken);
+      localStorage.setItem("accessToken", loginData.accessToken);
       localStorage.setItem("refreshToken", loginData.refreshToken);
       login(loginData.user);
-      navigate("/");
+      navigate("/home");
     }
   }, [isLoginSuccess, loginData, login, navigate]);
 
