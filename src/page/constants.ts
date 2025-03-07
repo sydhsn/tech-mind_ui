@@ -20,9 +20,12 @@ export const COURSE_ACTIONS = {
 
 export const LECTURE_ACTIONS = {
   LECTURES: "lectures",
-  //COUSRE_HAS_LECTURE: "lectures/:courseId/has-lectures",
 };
 
 export const PAYMENT_ACTIONS = {
   COURSE_PHURCHASE: "course-purchase",
+};
+
+export const PROGRESS_ACTIONS = {
+  SAVE_PROGRESS: "progress",
 };

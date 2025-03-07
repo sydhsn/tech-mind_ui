@@ -1,22 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import ReactPlayer from "react-player";
-import { fetchLectures } from "./fetchLecture";
+import {
+  useLazyGetLecturesByCourseIdQuery,
+  useSaveProgressMutation,
+} from "@/services/leactureAPI";
+import { useAuth } from "@/components/AuthProvider";
+import { toast } from "react-toastify";
+
+interface Lecture {
+  _id: string;
+  lectureTitle: string;
+  videoInfo: {
+    videoUrl: string;
+    publicId?: string;
+  };
+  duration: number;
+}
+
+interface ProgressState {
+  playedSeconds: number;
+}
 
 const StudentDashboard: React.FC = () => {
+  const { user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
-  interface Lecture {
-    _id: string;
-    lectureTitle: string;
-    courseId: string;
-    videoInfo: {
-      videoUrl: string;
-      publicId: string;
-    };
-    duration: number;
-    isPreviewFree: boolean;
-  }
-
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [currentLectureIndex, setCurrentLectureIndex] = useState(0);
   const [playedSeconds, setPlayedSeconds] = useState(0);
@@ -27,21 +35,26 @@ const StudentDashboard: React.FC = () => {
     new Set()
   );
 
+  // Ref for the ReactPlayer instance
+  const playerRef = useRef<ReactPlayer>(null);
+
+  // API call to fetch lectures
+  const [fetchLecturesByCourseId] = useLazyGetLecturesByCourseIdQuery();
+  const [saveUserProgress] = useSaveProgressMutation();
+
   // Fetch lectures by courseId
   useEffect(() => {
-    console.log("Course ID:", courseId); // Debugging
     const loadLectures = async () => {
       if (!courseId) {
-        setError("Course ID is not defined.");
         setLoading(false);
         return;
       }
       try {
-        const data = await fetchLectures(courseId);
-        console.log("Fetched Lectures:", data); // Debugging
-        setLectures(data);
+        const data = await fetchLecturesByCourseId(courseId).unwrap();
+        setLectures(data.lectures || []);
         setLoading(false);
       } catch (err) {
+        toast.error("Failed to fetch lectures. Please try again later.");
         setError("Failed to fetch lectures. Please try again later.");
         setLoading(false);
       }
@@ -50,13 +63,18 @@ const StudentDashboard: React.FC = () => {
     loadLectures();
   }, [courseId]);
 
-  // Handle video progress
-  interface ProgressState {
-    playedSeconds: number;
-  }
-
+  // Handle video save progress
   const handleProgress = (state: ProgressState) => {
     setPlayedSeconds(state.playedSeconds);
+    const currentLecture = lectures[currentLectureIndex];
+    if (courseId && user?.id && currentLecture) {
+      saveUserProgress({
+        userId: user?.id,
+        courseId,
+        lectureId: currentLecture._id,
+        playedSeconds: state.playedSeconds,
+      }).unwrap();
+    }
   };
 
   // Check if the current video is completed
@@ -73,7 +91,7 @@ const StudentDashboard: React.FC = () => {
           setPlayedSeconds(0);
         } else {
           // Course completed
-          alert("Congratulations! You have completed the course.");
+          toast.success("Congratulations! You have completed the course.");
           setIsPlaying(false);
         }
       }
@@ -86,7 +104,7 @@ const StudentDashboard: React.FC = () => {
       index > currentLectureIndex &&
       !completedLectures.has(lectures[index]._id)
     ) {
-      alert(
+      toast.success(
         "Please complete the current lecture before moving to the next one."
       );
       return;
@@ -101,6 +119,19 @@ const StudentDashboard: React.FC = () => {
       return (playedSeconds / lectures[currentLectureIndex].duration) * 100;
     }
     return completedLectures.has(lectureId) ? 100 : 0;
+  };
+
+  // Custom play/pause handler
+  const togglePlayPause = () => {
+    setIsPlaying((prev) => !prev);
+  };
+
+  // Seek to a specific time in the video
+  const handleSeek = (time: number) => {
+    if (playerRef.current) {
+      playerRef.current.seekTo(time, "seconds");
+      setPlayedSeconds(time);
+    }
   };
 
   if (loading) {
@@ -130,30 +161,48 @@ const StudentDashboard: React.FC = () => {
               <h2 className="text-xl font-semibold mb-4">
                 Lecture {lectures[currentLectureIndex].lectureTitle}
               </h2>
-              <ReactPlayer
-                url={lectures[currentLectureIndex].videoInfo.videoUrl}
-                playing={isPlaying}
-                onProgress={handleProgress}
-                controls={true}
-                width="100%"
-                height="400px"
-                config={{
-                  file: {
-                    attributes: {
-                      controlsList: "nodownload noremoteplayback", // Disable download and remote playback
-                      disablePictureInPicture: true, // Disable picture-in-picture
+              <div className="relative">
+                <ReactPlayer
+                  ref={playerRef}
+                  url={lectures[currentLectureIndex].videoInfo.videoUrl}
+                  playing={isPlaying}
+                  onProgress={handleProgress}
+                  controls={false} // Hide default controls
+                  width="100%"
+                  height="400px"
+                  config={{
+                    file: {
+                      attributes: {
+                        controlsList: "nodownload noremoteplayback", // Disable download and remote playback
+                        disablePictureInPicture: true, // Disable picture-in-picture
+                      },
                     },
-                  },
-                  youtube: {
-                    playerVars: {
-                      controls: 1, // Show controls
-                      disablekb: 1, // Disable keyboard controls
-                      modestbranding: 1, // Hide YouTube logo
-                      rel: 0, // Disable related videos
-                    },
-                  },
-                }}
-              />
+                  }}
+                />
+                {/* Custom Controls */}
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 flex items-center justify-between">
+                  <button
+                    onClick={togglePlayPause}
+                    className="text-white hover:text-gray-300"
+                  >
+                    {isPlaying ? "Pause" : "Play"}
+                  </button>
+                  <div className="flex-1 mx-4">
+                    <input
+                      type="range"
+                      min={0}
+                      max={lectures[currentLectureIndex].duration}
+                      value={playedSeconds}
+                      onChange={(e) => handleSeek(Number(e.target.value))}
+                      className="w-full"
+                    />
+                  </div>
+                  <span className="text-white">
+                    {Math.floor(playedSeconds)} /{" "}
+                    {lectures[currentLectureIndex].duration} sec
+                  </span>
+                </div>
+              </div>
               <div className="mt-4">
                 <p>
                   Progress: {Math.round(playedSeconds)} /{" "}
