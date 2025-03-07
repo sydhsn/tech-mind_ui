@@ -60,7 +60,7 @@ const routes = createRoutesFromElements(
     />
 
     <Route
-      path="student-dashboard"
+      path="student-dashboard/:courseId"
       element={
         <RoleProtectedRoute allowedRoles={["student", "admin"]}>
           <StudentDashboard />

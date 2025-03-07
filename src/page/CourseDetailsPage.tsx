@@ -2,14 +2,10 @@ import React, { useState, useEffect } from "react";
 import ReactPlayer from "react-player";
 import { faker } from "@faker-js/faker";
 import { useLazyFindPubishedCourseByIdQuery } from "@/services/courseAPI";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ICourse } from "@/types/AddCourse";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/AuthProvider";
-import {
-  useConfirmPaymentMutation,
-  useGetCreateOrderMutation,
-} from "@/services/paymentAPI";
 import { toast } from "react-toastify";
 
 declare global {
@@ -44,12 +40,13 @@ const reviews = [
 const CourseDetailsPage: React.FC = () => {
   const { user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const [course, setCourse] = useState<ICourse | null>(null);
   const [getCourseDetails, { data: courseData, isSuccess }] =
     useLazyFindPubishedCourseByIdQuery();
 
-  const [createOrder] = useGetCreateOrderMutation();
-  const [confirmPayment] = useConfirmPaymentMutation();
+  /* const [createOrder] = useGetCreateOrderMutation();
+  const [confirmPayment] = useConfirmPaymentMutation(); */
 
   // Fetch course details when the component mounts
   useEffect(() => {
@@ -65,8 +62,21 @@ const CourseDetailsPage: React.FC = () => {
     }
   }, [isSuccess, courseData]);
 
-  // Handle enrollment and payment
+  // handle enroll for free and navigate to dashboard
   const handleEnroll = async () => {
+    if (!user) {
+      toast.error("Please log in to enroll in the course.");
+      return;
+    }
+    if (!courseId) {
+      toast.error("Course ID is missing");
+      return;
+    }
+    navigate(`/student-dashboard/${courseId}`);
+  };
+
+  // Handle enrollment and payment
+  /* const handleEnroll = async () => {
     if (!user) {
       toast.error("Please log in to enroll in the course.");
       return;
@@ -121,7 +131,7 @@ const CourseDetailsPage: React.FC = () => {
       console.error("Error during payment process:", error);
       toast.error("Failed to create payment order. Please try again.");
     }
-  };
+  }; */
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -144,7 +154,7 @@ const CourseDetailsPage: React.FC = () => {
                   onClick={handleEnroll}
                   className="bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 transition-all"
                 >
-                  Enroll Now
+                  Watch Now
                 </Button>
                 <Button className="bg-gray-700 text-white py-3 px-6 rounded-lg hover:bg-gray-800 transition-all">
                   Add to Wishlist

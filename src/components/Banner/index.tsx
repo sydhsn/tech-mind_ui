@@ -9,7 +9,7 @@ const Banner: React.FC = () => {
     <div className="relative w-full h-[300px] md:h-[450px] bg-black">
       {/* Background Image */}
       <img
-        src={BannerImage} // Change to your actual image URL
+        src={BannerImage}
         alt="Banner"
         className="absolute inset-0 w-full h-full object-cover opacity-50"
       />
@@ -32,7 +32,7 @@ const Banner: React.FC = () => {
               "w-full bg-transparent border-none text-gray-200 placeholder-gray-400 focus:ring-0 focus:outline-none"
             )}
           />
-          <button className="p-2 text-white hover:text-gray-300 cursor-pointer">
+          <button className="p-2 text-white hover:text-gray-300">
             <Search size={20} />
           </button>
         </div>

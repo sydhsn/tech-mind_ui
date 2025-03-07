@@ -27,7 +27,7 @@ export default function PublishedCourses() {
 
   // Skeleton Loader Component
   const SkeletonLoader = () => (
-    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl animate-pulse">
+    <div className="rounded-lg overflow-hidden shadow-xl animate-pulse">
       <div className="w-full h-56 bg-gray-700 rounded-t-lg"></div>
       <div className="p-6">
         <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
@@ -45,10 +45,10 @@ export default function PublishedCourses() {
   };
 
   return (
-    <div className="bg-gray-900 text-white py-12">
+    <div className="bg-gray-900 text-white">
       <div className="container mx-auto p-4">
-        <h1 className="text-4xl font-extrabold text-center text-gray-100 mb-12">
-          Published Courses
+        <h1 className="text-3xl font-extrabold text-center text-gray-100 mb-6">
+          Courses
         </h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Show skeleton loader while loading */}
@@ -67,25 +67,27 @@ export default function PublishedCourses() {
                 <img
                   src={course.courseThumbnail}
                   alt={`Thumbnail for ${course.courseTitle}`}
-                  className="w-full h-56 object-cover rounded-t-lg"
+                  className="w-full h-44 object-cover rounded-t-lg"
                 />
-                <div className="p-6">
-                  <h2 className="text-2xl font-semibold text-white mb-4">
+                <div className="p-4">
+                  <h2 className="text-xl font-semibold text-white mb-3">
                     {course.courseTitle}
                   </h2>
-                  <p className="text-gray-300 mb-4">{course.subTitle}</p>
-                  <p className="text-gray-400 text-sm">{course.category}</p>
-                  <p className="text-gray-500 text-sm mb-4">
+                  <p className="text-gray-300 mb-3 text-sm">
+                    {course.subTitle}
+                  </p>
+                  <p className="text-gray-400 text-xs">{course.category}</p>
+                  <p className="text-gray-500 text-xs mb-3">
                     {course.courseLevel}
                   </p>
-                  <p className="text-gray-200 text-lg font-semibold mb-4">
+                  <p className="text-gray-200 text-lg font-semibold mb-3">
                     ${course.coursePrice}
                   </p>
                   <button
                     onClick={
                       course._id ? handleCousreDetails(course._id) : undefined
                     }
-                    className="bg-gray-600 cursor-pointer text-white py-2 px-6 rounded-lg mt-4 hover:bg-gray-500 transition-all"
+                    className="bg-gray-600 cursor-pointer text-white py-1.5 px-5 rounded-lg mt-3 hover:bg-gray-500 transition-all text-sm"
                   >
                     View Details
                   </button>
