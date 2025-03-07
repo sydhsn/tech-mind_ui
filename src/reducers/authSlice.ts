@@ -1,80 +1,42 @@
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
-const getAccessToken = () => localStorage.getItem("token");
-const getRefreshToken = () => localStorage.getItem("refreshToken");
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+}
 
-const isTokenExpired = (token: string) => {
-  if (!token) return true;
-  try {
-    const decoded: any = jwtDecode(token);
-    return decoded.exp * 1000 < Date.now();
-  } catch (error) {
-    return true;
-  }
+const initialState: AuthState = {
+  user: JSON.parse(localStorage.getItem("user") || "null"),
+  isAuthenticated: localStorage.getItem("isAuthenticated") === "true",
 };
 
-const refreshAccessToken = async () => {
-  try {
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) throw new Error("No refresh token available");
-
-    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-      refreshToken,
-    });
-
-    const { accessToken, refreshToken: newRefreshToken } = response.data;
-
-    localStorage.setItem("token", accessToken);
-    localStorage.setItem("refreshToken", newRefreshToken);
-
-    return accessToken;
-  } catch (error) {
-    console.error("Failed to refresh token", error);
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
-    return null;
-  }
-};
-
-const axiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    login: (state, action: PayloadAction<User>) => {
+      state.user = action.payload;
+      state.isAuthenticated = true;
+      localStorage.setItem("user", JSON.stringify(action.payload));
+      localStorage.setItem("isAuthenticated", "true");
+    },
+    logout: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
+      localStorage.removeItem("user");
+      localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+    },
   },
 });
 
-axiosInstance.interceptors.request.use(
-  async (config) => {
-    let token = getAccessToken();
-
-    if (token && isTokenExpired(token)) {
-      token = await refreshAccessToken();
-    }
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      const token = await refreshAccessToken();
-      if (token) {
-        error.config.headers.Authorization = `Bearer ${token}`;
-        return axiosInstance.request(error.config);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
-
-export default axiosInstance;
+export const { login, logout } = authSlice.actions;
+export default authSlice.reducer;

@@ -9,7 +9,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user } = useSelector(
+  const { isAuthenticated, user: authUser } = useSelector(
     (state: RootState) => state.auth
   );
 
