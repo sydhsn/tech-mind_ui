@@ -3,24 +3,22 @@ import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
-// Function to get the access token from local storage
-const getAccessToken = () => localStorage.getItem("token");
-
-// Function to get the refresh token from local storage
+// Get token functions
+const getAccessToken = () => localStorage.getItem("accessToken");
 const getRefreshToken = () => localStorage.getItem("refreshToken");
 
-// Function to check if the token is expired
+// Check if token is expired
 const isTokenExpired = (token: string) => {
   if (!token) return true;
   try {
     const decoded: any = jwtDecode(token);
     return decoded.exp * 1000 < Date.now(); // Convert to milliseconds
-  } catch (error) {
-    return true; // Treat invalid tokens as expired
+  } catch {
+    return true;
   }
 };
 
-// Function to refresh the access token
+// Refresh access token
 const refreshAccessToken = async () => {
   try {
     const refreshToken = getRefreshToken();
@@ -33,14 +31,22 @@ const refreshAccessToken = async () => {
     const { accessToken, refreshToken: newRefreshToken } = response.data;
 
     // Store new tokens
-    localStorage.setItem("token", accessToken);
+    localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
+
+    // Update Redux store
+    //store.dispatch({ type: "auth/refreshToken", payload: accessToken });
 
     return accessToken;
   } catch (error) {
-    console.error("Failed to refresh token", error);
-    localStorage.removeItem("token");
+    console.error("Token refresh failed", error);
+
+    // Log user out if refresh fails
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.setItem("isAuthenticated", "false");
+    //store.dispatch({ type: "auth/loggedOut" });
+
     return null;
   }
 };
@@ -53,7 +59,7 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request Interceptor
+// Request interceptor
 axiosInstance.interceptors.request.use(
   async (config) => {
     let token = getAccessToken();
@@ -71,7 +77,7 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor to handle 401 errors
+// Response interceptor to handle 401 errors
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
