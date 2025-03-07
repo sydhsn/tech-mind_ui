@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../reducers/authSlice";
 import { RootState } from "../store/store";
@@ -9,12 +9,17 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
-  const { isAuthenticated, user } = useSelector(
+  const { isAuthenticated, user: authUser } = useSelector(
     (state: RootState) => state.auth
   );
 
-  // Local user state (if needed)
-  const [localUser, setLocalUser] = useState(user || null);
+  const [localUser, setLocalUser] = useState(authUser || null);
+
+  useEffect(() => {
+    if (authUser) {
+      setLocalUser(authUser);
+    }
+  }, [authUser]);
 
   const handleLogin = (userData: any) => {
     dispatch(login(userData));
@@ -29,7 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider
       value={{
-        user: localUser || user,
+        user: localUser || authUser,
         isAuthenticated,
         login: handleLogin,
         logout: handleLogout,

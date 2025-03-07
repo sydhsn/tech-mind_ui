@@ -34,7 +34,6 @@ export default function Header() {
 
   return (
     <header className="bg-gradient-to-r from-black to-gray-900 text-white shadow-md w-full h-16 px-4 flex justify-between items-center fixed top-0 left-0 z-50">
-      {/* Logo */}
       <div
         className="flex items-center space-x-2 cursor-pointer"
         onClick={() => navigate("/")}
@@ -42,9 +41,7 @@ export default function Header() {
         <img src={Logo} alt="Logo" className="h-10" />
       </div>
 
-      {/* Navigation & Profile */}
       <div className="flex items-center space-x-6 ml-auto">
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex space-x-6">
           {navLinks.map((link) => (
             <a
@@ -57,7 +54,6 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* Profile Dropdown or Login Button */}
         {isAuthenticated ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -81,7 +77,6 @@ export default function Header() {
               align="end"
               sideOffset={8}
             >
-              {/* User Info */}
               <div className="flex items-center space-x-3 px-4 py-3 border-b border-gray-700">
                 <Avatar className="h-10 w-10">
                   <AvatarImage
@@ -101,7 +96,6 @@ export default function Header() {
                 </div>
               </div>
 
-              {/* Dropdown Items */}
               <DropdownMenuItem
                 className="p-3 hover:bg-gray-700 cursor-pointer flex items-center space-x-3 transition-all duration-300"
                 onClick={() => navigate("/profile")}
@@ -125,7 +119,6 @@ export default function Header() {
                 <span>Collections</span>
               </DropdownMenuItem>
 
-              {/* Logout */}
               <DropdownMenuItem
                 className="p-3 hover:bg-gray-700 cursor-pointer flex items-center space-x-3 transition-all duration-300 border-t border-gray-700"
                 onClick={async () => {
@@ -148,7 +141,6 @@ export default function Header() {
           </Button>
         )}
 
-        {/* Mobile Menu Button */}
         <Button
           className="md:hidden text-white hover:bg-gray-800 transition-all"
           variant="ghost"
@@ -158,7 +150,6 @@ export default function Header() {
         </Button>
       </div>
 
-      {/* Mobile Navigation */}
       {menuOpen && (
         <nav className="absolute top-16 right-0 w-full bg-gray-800 shadow-md md:hidden transition-all duration-300 ease-in-out">
           <div className="flex flex-col space-y-4 p-4">

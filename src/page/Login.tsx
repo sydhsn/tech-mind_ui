@@ -13,21 +13,11 @@ const Login: React.FC = () => {
 
   const [
     loginApiCall,
-    {
-      data: loginData,
-      isSuccess: isLoginSuccess,
-      isError: isLoginError,
-      error: loginError,
-    },
+    { data: loginData, isSuccess: isLoginSuccess, isError: isLoginError },
   ] = useLoginMutation();
-
   const [
     registerApiCall,
-    {
-      isSuccess: isRegisterSuccess,
-      isError: isRegisterError,
-      error: registerError,
-    },
+    { isSuccess: isRegisterSuccess, isError: isRegisterError },
   ] = useRegisterMutation();
 
   const handleAuth = useCallback(
@@ -39,12 +29,11 @@ const Login: React.FC = () => {
     }) => {
       const { name, email, password, isLogin: isLoginMode } = data;
 
-      if (!email || !password || (!isLoginMode && !name)) {
-        toast.error("Please fill in all fields");
-        return;
-      }
-
       if (isLoginMode) {
+        if (!email || !password) {
+          toast.error("Please fill in all fields");
+          return;
+        }
         loginApiCall({ email, password });
       } else {
         if (!name || !email || !password) {
@@ -57,44 +46,39 @@ const Login: React.FC = () => {
     [loginApiCall, registerApiCall]
   );
 
-  // Handle login success
   useEffect(() => {
     if (isLoginSuccess && loginData) {
-      const { user, accessToken, refreshToken } = loginData;
-
-      if (user && accessToken && refreshToken) {
-        login({ user, accessToken, refreshToken }); // Dispatch login action
-        toast.success("Login successful!");
-        navigate("/");
-      }
+      localStorage.setItem("token", loginData.accessToken);
+      localStorage.setItem("refreshToken", loginData.refreshToken);
+      login(loginData.user);
+      navigate("/");
     }
   }, [isLoginSuccess, loginData, login, navigate]);
 
-  // Handle errors
   useEffect(() => {
     if (isLoginError) {
-      toast.error(
-        loginError && "data" in loginError
-          ? loginError.data.message
-          : "Login failed. Please check your credentials."
-      );
+      toast.error("Login failed. Please check your credentials.");
     }
-    if (isRegisterError) {
-      toast.error(
-        registerError && "data" in registerError
-          ? registerError.data.message
-          : "Registration failed. Please try again."
-      );
-    }
-  }, [isLoginError, isRegisterError, loginError, registerError]);
+  }, [isLoginError]);
 
-  // Handle registration success
   useEffect(() => {
     if (isRegisterSuccess) {
       toast.success("Registration successful! Please login.");
       setIsLogin(true);
     }
   }, [isRegisterSuccess]);
+
+  useEffect(() => {
+    if (isRegisterError) {
+      toast.error("Registration failed. Please try again.");
+    }
+  }, [isRegisterError]);
+
+  useEffect(() => {
+    if (isLoginSuccess) {
+      toast.success("Login successful!");
+    }
+  }, [isLoginSuccess]);
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-900 text-white p-6 md:p-10 overflow-hidden">

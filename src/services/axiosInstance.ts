@@ -3,22 +3,19 @@ import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
-// Get token functions
-const getAccessToken = () => localStorage.getItem("accessToken");
+const getAccessToken = () => localStorage.getItem("token");
 const getRefreshToken = () => localStorage.getItem("refreshToken");
 
-// Check if token is expired
 const isTokenExpired = (token: string) => {
   if (!token) return true;
   try {
     const decoded: any = jwtDecode(token);
-    return decoded.exp * 1000 < Date.now(); // Convert to milliseconds
-  } catch {
+    return decoded.exp * 1000 < Date.now();
+  } catch (error) {
     return true;
   }
 };
 
-// Refresh access token
 const refreshAccessToken = async () => {
   try {
     const refreshToken = getRefreshToken();
@@ -30,28 +27,18 @@ const refreshAccessToken = async () => {
 
     const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-    // Store new tokens
-    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("token", accessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
-
-    // Update Redux store
-    //store.dispatch({ type: "auth/refreshToken", payload: accessToken });
 
     return accessToken;
   } catch (error) {
-    console.error("Token refresh failed", error);
-
-    // Log user out if refresh fails
-    localStorage.removeItem("accessToken");
+    console.error("Failed to refresh token", error);
+    localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
-    localStorage.setItem("isAuthenticated", "false");
-    //store.dispatch({ type: "auth/loggedOut" });
-
     return null;
   }
 };
 
-// Create Axios instance
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -59,7 +46,6 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request interceptor
 axiosInstance.interceptors.request.use(
   async (config) => {
     let token = getAccessToken();
@@ -77,7 +63,6 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle 401 errors
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
