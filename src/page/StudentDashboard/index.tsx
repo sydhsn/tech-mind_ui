@@ -137,6 +137,22 @@ const StudentDashboard: React.FC = () => {
                 controls={true}
                 width="100%"
                 height="400px"
+                config={{
+                  file: {
+                    attributes: {
+                      controlsList: "nodownload noremoteplayback", // Disable download and remote playback
+                      disablePictureInPicture: true, // Disable picture-in-picture
+                    },
+                  },
+                  youtube: {
+                    playerVars: {
+                      controls: 1, // Show controls
+                      disablekb: 1, // Disable keyboard controls
+                      modestbranding: 1, // Hide YouTube logo
+                      rel: 0, // Disable related videos
+                    },
+                  },
+                }}
               />
               <div className="mt-4">
                 <p>
