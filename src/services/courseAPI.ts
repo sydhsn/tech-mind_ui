@@ -81,6 +81,17 @@ const courseAPI = apiGateway.injectEndpoints({
         },
       }),
     }),
+
+    // Get a published course by its ID
+    findPubishedCourseById: build.query<ICourse, string>({
+      query: (courseId) => ({
+        actionName: `${COURSE_ACTIONS.COURSE_BY_ID}/published/${courseId}`,
+        methodType: METHOD.GET,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
   }),
 });
 
@@ -93,4 +104,5 @@ export const {
   useSaveLecturesMutation,
   usePublishCourseMutation,
   useLazyGetAllPublishedCoursesQuery,
+  useLazyFindPubishedCourseByIdQuery,
 } = courseAPI;

@@ -30,11 +30,19 @@ const refreshAccessToken = async () => {
     localStorage.setItem("token", accessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
 
+    // Update Redux store
+    //store.dispatch({ type: "auth/refreshToken", payload: accessToken });
+
     return accessToken;
   } catch (error) {
-    console.error("Failed to refresh token", error);
-    localStorage.removeItem("token");
+    console.error("Token refresh failed", error);
+
+    // Log user out if refresh fails
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.setItem("isAuthenticated", "false");
+    //store.dispatch({ type: "auth/loggedOut" });
+
     return null;
   }
 };

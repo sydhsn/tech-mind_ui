@@ -7,7 +7,7 @@ interface LoginCredentials {
 }
 
 interface RegisterCredentials {
-  name: string;
+  name: string | null;
   email: string;
   password: string;
 }
