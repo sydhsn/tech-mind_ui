@@ -13,7 +13,7 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  user: JSON.parse(localStorage.getItem("user") || "null"), // Ensure valid JSON
+  user: JSON.parse(localStorage.getItem("user") || "null"),
   isAuthenticated: localStorage.getItem("isAuthenticated") === "true",
 };
 
@@ -32,6 +32,8 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem("user");
       localStorage.removeItem("isAuthenticated");
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
     },
   },
 });

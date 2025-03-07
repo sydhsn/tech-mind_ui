@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, logout } from "../reducers/authSlice";
 import { RootState } from "../store/store";
@@ -13,27 +13,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     (state: RootState) => state.auth
   );
 
-  // Local user state (if needed)
   const [localUser, setLocalUser] = useState(authUser || null);
+
+  useEffect(() => {
+    if (authUser) {
+      setLocalUser(authUser);
+    }
+  }, [authUser]);
 
   const handleLogin = (userData: any) => {
     dispatch(login(userData));
-    setLocalUser(userData); // Update local user state if needed
+    setLocalUser(userData);
   };
 
   const handleLogout = () => {
     dispatch(logout());
-    setLocalUser(null); // Clear local user state if needed
+    setLocalUser(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user: localUser || authUser, // Use localUser if available, otherwise fallback to authUser
+        user: localUser || authUser,
         isAuthenticated,
         login: handleLogin,
         logout: handleLogout,
-        setUser: setLocalUser, // Provide setUser function for local updates
+        setUser: setLocalUser,
       }}
     >
       {children}

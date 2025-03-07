@@ -46,22 +46,21 @@ const Login: React.FC = () => {
     [loginApiCall, registerApiCall]
   );
 
-  // Handle login success
   useEffect(() => {
     if (isLoginSuccess && loginData) {
-      login(loginData);
+      localStorage.setItem("token", loginData.accessToken);
+      localStorage.setItem("refreshToken", loginData.refreshToken);
+      login(loginData.user);
       navigate("/");
     }
   }, [isLoginSuccess, loginData, login, navigate]);
 
-  // Handle login error
   useEffect(() => {
     if (isLoginError) {
       toast.error("Login failed. Please check your credentials.");
     }
   }, [isLoginError]);
 
-  // Handle registration success
   useEffect(() => {
     if (isRegisterSuccess) {
       toast.success("Registration successful! Please login.");
@@ -69,14 +68,12 @@ const Login: React.FC = () => {
     }
   }, [isRegisterSuccess]);
 
-  // Handle registration error
   useEffect(() => {
     if (isRegisterError) {
       toast.error("Registration failed. Please try again.");
     }
   }, [isRegisterError]);
 
-  // handle login success
   useEffect(() => {
     if (isLoginSuccess) {
       toast.success("Login successful!");
