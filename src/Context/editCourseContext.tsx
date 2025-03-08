@@ -15,7 +15,7 @@ export const EditCourseProvider: React.FC<{ children: React.ReactNode }> = ({
   const navigate = useNavigate();
 
   const editCourse = (courseId: string) => {
-    navigate(`/teacher-dashboard/add-course/${courseId}`);
+    navigate(`/home/teacher-dashboard/add-course/${courseId}`);
   };
 
   return (

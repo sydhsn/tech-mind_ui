@@ -8,6 +8,8 @@ export const AUTH_ACTIONS = {
   LOGIN: "auth/login",
   REGISTER: "auth/register",
   LOGOUT: "auth/logout",
+  CHANGE_PASSWORD: "auth/change-password",
+  refreshToken: "auth/refresh-token" as const,
   UPDATE_PROFILE: (userId: string) => `auth/profile/update/${userId}`,
 } as const;
 
@@ -20,9 +22,12 @@ export const COURSE_ACTIONS = {
 
 export const LECTURE_ACTIONS = {
   LECTURES: "lectures",
-  //COUSRE_HAS_LECTURE: "lectures/:courseId/has-lectures",
 };
 
 export const PAYMENT_ACTIONS = {
   COURSE_PHURCHASE: "course-purchase",
+};
+
+export const PROGRESS_ACTIONS = {
+  SAVE_PROGRESS: "progress",
 };

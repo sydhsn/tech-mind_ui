@@ -59,6 +59,16 @@ export const authApi = apiGateway.injectEndpoints({
         body: formData,
       }),
     }),
+    changePassword: builder.mutation({
+      query: (formData) => ({
+        actionName: AUTH_ACTIONS.CHANGE_PASSWORD,
+        methodType: METHOD.PUT,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -67,4 +77,5 @@ export const {
   useRegisterMutation,
   useLogoutMutation,
   useUpdateProfileMutation,
+  useChangePasswordMutation,
 } = authApi;

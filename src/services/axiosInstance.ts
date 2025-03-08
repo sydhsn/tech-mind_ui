@@ -3,7 +3,7 @@ import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
-const getAccessToken = () => localStorage.getItem("token");
+const getAccessToken = () => localStorage.getItem("accessToken");
 const getRefreshToken = () => localStorage.getItem("refreshToken");
 
 const isTokenExpired = (token: string) => {
@@ -21,19 +21,19 @@ const refreshAccessToken = async () => {
     const refreshToken = getRefreshToken();
     if (!refreshToken) throw new Error("No refresh token available");
 
-    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+    const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
       refreshToken,
     });
 
     const { accessToken, refreshToken: newRefreshToken } = response.data;
 
-    localStorage.setItem("token", accessToken);
+    localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
 
     return accessToken;
   } catch (error) {
     console.error("Failed to refresh token", error);
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     return null;
   }

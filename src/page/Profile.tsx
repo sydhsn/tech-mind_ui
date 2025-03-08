@@ -117,7 +117,7 @@ export default function Profile() {
     : profile.profilePhoto;
 
   return (
-    <div className="bg-gray-900 text-white h-[calc(100vh-114px)] flex items-center justify-center overflow-hidden">
+    <div className="bg-gray-900 text-white h-[calc(100vh-50px)] flex items-center justify-center overflow-hidden">
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-lg">
         <div className="flex flex-col items-center">
           <label

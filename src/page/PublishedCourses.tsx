@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 export default function PublishedCourses() {
   const navigate = useNavigate();
   const [publishedCourse, setPublishedCourse] = useState<ICourse[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Loading state
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // API call to get courses
   const [fetchAllCourse, { data: coursesData, isSuccess: isCourseSuccess }] =
@@ -15,8 +15,8 @@ export default function PublishedCourses() {
   useEffect(() => {
     fetchAllCourse()
       .unwrap()
-      .then(() => setIsLoading(false)) // Stop loading on success
-      .catch(() => setIsLoading(false)); // Stop loading on error
+      .then(() => setIsLoading(false))
+      .catch(() => setIsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function PublishedCourses() {
 
   // Skeleton Loader Component
   const SkeletonLoader = () => (
-    <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl animate-pulse">
+    <div className="rounded-lg overflow-hidden shadow-xl animate-pulse bg-gray-800 border border-gray-700">
       <div className="w-full h-56 bg-gray-700 rounded-t-lg"></div>
       <div className="p-6">
         <div className="h-6 bg-gray-700 rounded w-3/4 mb-4"></div>
@@ -39,21 +39,21 @@ export default function PublishedCourses() {
     </div>
   );
 
-  // handle course details page by course id
-  const handleCousreDetails = (courseId: string) => () => {
-    navigate(`/course-details/${courseId}`);
+  // Handle course details page by course id
+  const handleCourseDetails = (courseId: string) => () => {
+    navigate(`/home/course-details/${courseId}`);
   };
 
   return (
-    <div className="bg-gray-900 text-white py-12">
-      <div className="container mx-auto p-4">
+    <div className="bg-gray-900 text-white min-h-screen py-12">
+      <div className="container mx-auto px-4">
         <h1 className="text-4xl font-extrabold text-center text-gray-100 mb-12">
-          Published Courses
+          Explore Our Courses
         </h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {/* Show skeleton loader while loading */}
           {isLoading &&
-            Array.from({ length: 4 }).map((_, index) => (
+            Array.from({ length: 8 }).map((_, index) => (
               <SkeletonLoader key={index} />
             ))}
 
@@ -62,30 +62,36 @@ export default function PublishedCourses() {
             publishedCourse.map((course) => (
               <div
                 key={course._id}
-                className="bg-gray-800 hover:bg-gray-700 transition-all rounded-lg overflow-hidden shadow-xl transform hover:scale-105"
+                className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden shadow-xl transform hover:scale-105 transition-transform duration-300 hover:shadow-2xl"
               >
                 <img
                   src={course.courseThumbnail}
                   alt={`Thumbnail for ${course.courseTitle}`}
-                  className="w-full h-56 object-cover rounded-t-lg"
+                  className="w-full h-48 object-cover rounded-t-lg"
                 />
                 <div className="p-6">
-                  <h2 className="text-2xl font-semibold text-white mb-4">
+                  <h2 className="text-xl font-bold text-white mb-3">
                     {course.courseTitle}
                   </h2>
-                  <p className="text-gray-300 mb-4">{course.subTitle}</p>
-                  <p className="text-gray-400 text-sm">{course.category}</p>
-                  <p className="text-gray-500 text-sm mb-4">
-                    {course.courseLevel}
+                  <p className="text-gray-300 mb-3 text-sm">
+                    {course.subTitle}
                   </p>
-                  <p className="text-gray-200 text-lg font-semibold mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gray-400 text-xs bg-gray-700 px-2 py-1 rounded-full">
+                      {course.category}
+                    </span>
+                    <span className="text-gray-400 text-xs bg-gray-700 px-2 py-1 rounded-full">
+                      {course.courseLevel}
+                    </span>
+                  </div>
+                  <p className="text-gray-200 text-lg font-semibold mb-3">
                     ${course.coursePrice}
                   </p>
                   <button
                     onClick={
-                      course._id ? handleCousreDetails(course._id) : undefined
+                      course._id ? handleCourseDetails(course._id) : undefined
                     }
-                    className="bg-gray-600 cursor-pointer text-white py-2 px-6 rounded-lg mt-4 hover:bg-gray-500 transition-all"
+                    className="cursor-pointer w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-lg mt-3 hover:from-blue-600 hover:to-purple-700 transition-all text-sm font-semibold"
                   >
                     View Details
                   </button>
@@ -95,8 +101,11 @@ export default function PublishedCourses() {
 
           {/* Show "No records found" if no courses are available */}
           {!isLoading && publishedCourse.length === 0 && (
-            <div className="text-center text-gray-300 col-span-full">
-              No courses available
+            <div className="text-center text-gray-300 col-span-full py-12">
+              <div className="text-2xl font-bold mb-4">No Courses Found</div>
+              <p className="text-gray-400">
+                It looks like there are no courses available at the moment.
+              </p>
             </div>
           )}
         </div>

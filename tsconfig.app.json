@@ -35,6 +35,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": ["src"],
+  "include": ["src", "progressWorker.ts"],
   "exclude": ["node_modules"]
 }

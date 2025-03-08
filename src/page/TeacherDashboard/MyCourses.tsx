@@ -46,7 +46,7 @@ const MyCourses: React.FC = () => {
   };
 
   const handleAddCourse = () => {
-    navigate("/teacher-dashboard/add-course");
+    navigate("/home/teacher-dashboard/add-course");
   };
 
   return (
