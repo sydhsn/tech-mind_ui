@@ -25,7 +25,6 @@ import Students from "./page/TeacherDashboard/Students";
 
 import { EditCourseProvider } from "./Context/editCourseContext";
 import PageNotFound from "./page/PageNotFound";
-import AboutPage from "./page/AboutPage";
 import CourseDetailsPage from "./page/CourseDetailsPage";
 
 // Define routes using JSX
@@ -116,7 +115,6 @@ const routes = createRoutesFromElements(
         }
       />
 
-      <Route path="about" element={<AboutPage />} />
       <Route
         path="/home/course-details/:courseId"
         element={<CourseDetailsPage />}

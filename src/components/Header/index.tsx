@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Menu, X, User, Settings, LogOut, Heart, Folder } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,11 +28,24 @@ export default function Header() {
   // Navigation links
   const navLinks = [
     { href: "/home", label: "Home" },
-    { href: "/home/about", label: "About" },
     ...(isAuthenticated && (user?.role === "admin" || user?.role === "teacher")
       ? [{ href: dashboardPath, label: "Dashboard" }]
       : []),
   ];
+
+  // Toggle mobile menu
+  const toggleMenu = useCallback(() => {
+    setMenuOpen((prev) => !prev);
+  }, []);
+
+  // Handle navigation
+  const handleNavigation = useCallback(
+    (path: string) => {
+      navigate(path);
+      setMenuOpen(false);
+    },
+    [navigate]
+  );
 
   return (
     <header className="bg-gradient-to-r from-black to-gray-900 text-white shadow-md w-full h-16 px-4 flex justify-between items-center fixed top-0 left-0 z-50">
@@ -56,7 +69,7 @@ export default function Header() {
               className="text-gray-300 hover:text-white transition duration-300"
               onClick={(e) => {
                 e.preventDefault();
-                navigate(link.href);
+                handleNavigation(link.href);
               }}
             >
               {link.label}
@@ -111,14 +124,14 @@ export default function Header() {
               {/* Dropdown Menu Items */}
               <DropdownMenuItem
                 className="p-3 hover:bg-gray-700 cursor-pointer flex items-center space-x-3 transition-all duration-300"
-                onClick={() => navigate("/home/profile")}
+                onClick={() => handleNavigation("/home/profile")}
               >
                 <User className="h-4 w-4 text-gray-300" />
                 <span>My Profile</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="p-3 hover:bg-gray-700 cursor-pointer flex items-center space-x-3 transition-all duration-300"
-                onClick={() => navigate("/home/settings")}
+                onClick={() => handleNavigation("/home/settings")}
               >
                 <Settings className="h-4 w-4 text-gray-300" />
                 <span>Account Settings</span>
@@ -161,7 +174,7 @@ export default function Header() {
         <Button
           className="md:hidden text-white hover:bg-gray-800 transition-all"
           variant="ghost"
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={toggleMenu}
           aria-label="Toggle Menu"
         >
           {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -179,8 +192,7 @@ export default function Header() {
                 className="text-gray-300 hover:text-white transition duration-300"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate(link.href);
-                  setMenuOpen(false);
+                  handleNavigation(link.href);
                 }}
               >
                 {link.label}

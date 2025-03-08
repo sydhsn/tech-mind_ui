@@ -43,6 +43,8 @@ interface ProgressItem {
 }
 
 interface GetUserProgressResponse {
+  lectureId: string;
+  playedSeconds: number;
   progress: ProgressItem[] | undefined;
 }
 

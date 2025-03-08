@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import ReactPlayer from "react-player";
-import {
-  useLazyGetLecturesByCourseIdQuery,
-  useSaveProgressMutation,
-} from "@/services/leactureAPI";
 import { useAuth } from "@/components/AuthProvider";
 import { toast } from "react-toastify";
+import {
+  useLazyGetLecturesByCourseIdQuery,
+  useGetUserProgressQuery,
+  useSaveProgressMutation,
+} from "@/services/leactureAPI";
+import SmartReactPlayer from "@/components/smartReactPlayer";
 
 interface Lecture {
   _id: string;
@@ -17,238 +18,191 @@ interface Lecture {
   };
   duration: number;
 }
-
-interface ProgressState {
-  playedSeconds: number;
-}
-
+const COMMENTS = [
+  {
+    id: 1,
+    name: "Alice",
+    time: "2 hours ago",
+    text: "This lecture was very informative!",
+  },
+  {
+    id: 2,
+    name: "Bob",
+    time: "5 hours ago",
+    text: "Great explanation of state management.",
+  },
+  {
+    id: 3,
+    name: "Charlie",
+    time: "1 day ago",
+    text: "The video quality is excellent.",
+  },
+];
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [currentLectureIndex, setCurrentLectureIndex] = useState(0);
   const [playedSeconds, setPlayedSeconds] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true); // Start playing by default
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [completedLectures, setCompletedLectures] = useState<Set<string>>(
-    new Set()
-  );
+  const [duration, setDuration] = useState<number>(0);
+  const [completedLectures] = useState<Set<string>>(new Set());
+  const [comment, setComment] = useState("");
 
-  // Ref for the ReactPlayer instance
-  const playerRef = useRef<ReactPlayer>(null);
-
-  // API call to fetch lectures
   const [fetchLecturesByCourseId] = useLazyGetLecturesByCourseIdQuery();
-  const [saveUserProgress] = useSaveProgressMutation();
+  const [saveProgressMutation] = useSaveProgressMutation();
+  const { data: userProgress, isLoading: isProgressLoading } =
+    useGetUserProgressQuery(
+      { userId: user?.id ?? "", courseId: courseId ?? "" },
+      { skip: !user?.id || !courseId }
+    );
 
   // Fetch lectures by courseId
   useEffect(() => {
     const loadLectures = async () => {
-      if (!courseId) {
-        setLoading(false);
-        return;
-      }
+      if (!courseId) return;
       try {
         const data = await fetchLecturesByCourseId(courseId).unwrap();
         setLectures(data.lectures || []);
-        setLoading(false);
       } catch (err) {
         toast.error("Failed to fetch lectures. Please try again later.");
-        setError("Failed to fetch lectures. Please try again later.");
-        setLoading(false);
       }
     };
 
     loadLectures();
-  }, [courseId]);
+  }, [courseId, fetchLecturesByCourseId]);
 
-  // Handle video save progress
-  const handleProgress = async (state: ProgressState) => {
-    setPlayedSeconds(state.playedSeconds);
-    const currentLecture = lectures[currentLectureIndex];
-    if (courseId && user?.id && currentLecture) {
-      try {
-        await saveUserProgress({
-          userId: user?.id,
-          courseId,
-          lectureId: currentLecture._id,
-          playedSeconds: state.playedSeconds,
-        }).unwrap();
-      } catch (err) {
-        toast.error("Failed to save progress. Please try again.");
-        console.error("Progress save error:", err);
-      }
-    }
-  };
-
-  // Check if the current video is completed
+  // Restore user progress
   useEffect(() => {
-    if (lectures.length > 0) {
-      const currentLecture = lectures[currentLectureIndex];
-      if (playedSeconds >= currentLecture.duration) {
-        // Mark the current lecture as completed
-        setCompletedLectures((prev) => new Set(prev).add(currentLecture._id));
-
-        if (currentLectureIndex < lectures.length - 1) {
-          // Move to the next lecture
-          setCurrentLectureIndex(currentLectureIndex + 1);
-          setPlayedSeconds(0);
-        } else {
-          // Course completed
-          toast.success("Congratulations! You have completed the course.");
-          setIsPlaying(false);
+    if (userProgress && lectures.length > 0) {
+      const progressData = userProgress.progress?.[0];
+      if (progressData) {
+        const lastWatchedLecture = lectures.find(
+          (lecture) => lecture._id === progressData.lectureId
+        );
+        if (lastWatchedLecture) {
+          const lectureIndex = lectures.indexOf(lastWatchedLecture);
+          setCurrentLectureIndex(lectureIndex);
+          setPlayedSeconds(progressData.playedSeconds);
         }
       }
     }
-  }, [playedSeconds, currentLectureIndex, lectures]);
+  }, [userProgress, lectures]);
 
-  // Prevent jumping to future lectures
-  const handleLectureClick = (index: number) => {
-    if (
-      index > currentLectureIndex &&
-      !completedLectures.has(lectures[index]._id)
-    ) {
-      toast.success(
-        "Please complete the current lecture before moving to the next one."
-      );
+  // Memoized saveUserProgress function
+  const saveUserProgress = useCallback(
+    async (request: { playedSeconds?: number }) => {
+      if (!user?.id || !courseId) {
+        throw new Error("User ID or Course ID is missing");
+      }
+      try {
+        await saveProgressMutation({
+          userId: user.id,
+          courseId,
+          lectureId: lectures[currentLectureIndex]._id,
+          playedSeconds: request?.playedSeconds ?? 0,
+        }).unwrap();
+      } catch (error) {
+        console.error("Failed to save progress:", error);
+        throw error;
+      }
+    },
+    [user?.id, courseId, lectures, currentLectureIndex, saveProgressMutation]
+  );
+
+  // Memoized video URL
+  const videoUrl = useMemo(
+    () => lectures[currentLectureIndex]?.videoInfo?.videoUrl,
+    [lectures, currentLectureIndex]
+  );
+
+  // Memoized lecture progress calculation
+  const getLectureProgress = useCallback(
+    (lectureId: string) => {
+      if (lectureId === lectures[currentLectureIndex]._id) {
+        return (playedSeconds / lectures[currentLectureIndex].duration) * 100;
+      }
+      return completedLectures.has(lectureId) ? 100 : 0;
+    },
+    [currentLectureIndex, lectures, playedSeconds, completedLectures]
+  );
+
+  // Handle lecture navigation
+  const handleLectureClick = useCallback(
+    (index: number) => {
+      if (
+        index > currentLectureIndex &&
+        !completedLectures.has(lectures[index]._id)
+      ) {
+        toast.success(
+          "Please complete the current lecture before moving to the next one."
+        );
+        return;
+      }
+      setCurrentLectureIndex(index);
+      setPlayedSeconds(0);
+    },
+    [currentLectureIndex, completedLectures, lectures]
+  );
+
+  // Handle comment submission
+  const handleCommentSubmit = useCallback(() => {
+    if (!comment.trim()) {
+      toast.error("Comment cannot be empty.");
       return;
     }
-    setCurrentLectureIndex(index);
-    setPlayedSeconds(0);
-  };
+    console.log("Comment submitted:", comment);
+    setComment("");
+    toast.success("Comment submitted successfully!");
+  }, [comment]);
 
-  // Calculate progress percentage for a lecture
-  const getLectureProgress = (lectureId: string) => {
-    if (lectureId === lectures[currentLectureIndex]._id) {
-      return (playedSeconds / lectures[currentLectureIndex].duration) * 100;
-    }
-    return completedLectures.has(lectureId) ? 100 : 0;
-  };
-
-  // Custom play/pause handler
-  const togglePlayPause = () => {
-    setIsPlaying((prev) => !prev);
-  };
-
-  // Seek to a specific time in the video
-  const handleSeek = (time: number) => {
-    if (playerRef.current) {
-      playerRef.current.seekTo(time, "seconds");
-      setPlayedSeconds(time);
-    }
-  };
-
-  if (loading) {
+  if (isProgressLoading || !lectures.length) {
     return <div className="text-center text-white">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
-  }
-
-  if (lectures.length === 0) {
-    return (
-      <div className="text-center text-white">
-        No lectures found for this course.
-      </div>
-    );
-  }
-
-  const videoUrl = lectures[currentLectureIndex]?.videoInfo?.videoUrl;
-  if (!videoUrl) {
-    return (
-      <div className="text-center text-white">
-        Video URL is missing or invalid.
-      </div>
-    );
   }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Course Lectures</h1>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Video and Lecture List Container */}
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Video Player Section */}
-          <div className="lg:col-span-2">
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">
-                Lecture {lectures[currentLectureIndex].lectureTitle}
-              </h2>
-              <div className="relative">
-                <ReactPlayer
-                  ref={playerRef}
-                  url={videoUrl}
-                  playing={isPlaying}
-                  onProgress={handleProgress}
-                  controls={false} // Hide default controls
-                  width="100%"
-                  height="400px"
-                  config={{
-                    file: {
-                      attributes: {
-                        controlsList: "nodownload noremoteplayback", // Disable download and remote playback
-                        disablePictureInPicture: true, // Disable picture-in-picture
-                      },
-                    },
-                  }}
-                  onError={(err) => {
-                    toast.error(
-                      "Failed to load the video. Please check the URL."
-                    );
-                    console.error("Video error:", err);
-                  }}
+          <div className="lg:w-2/3 bg-gray-800 p-4 rounded-lg">
+            <h2 className="text-xl font-semibold mb-4">
+              Lecture {lectures[currentLectureIndex].lectureTitle}
+            </h2>
+            <div className="relative h-[400px] overflow-hidden rounded-lg">
+              <SmartReactPlayer
+                src={videoUrl}
+                initialProgress={playedSeconds}
+                onDurationChange={setDuration}
+                onTimeUpdate={setPlayedSeconds}
+                enableControls={true}
+                userId={user?.id}
+                courseId={courseId}
+                lectureId={lectures[currentLectureIndex]._id}
+                saveUserProgress={saveUserProgress}
+              />
+            </div>
+            <div className="mt-4">
+              <p>
+                Progress: {Math.round(playedSeconds)} / {duration.toFixed(2)}{" "}
+                seconds
+              </p>
+              <div className="w-full bg-gray-700 h-2 rounded-full mt-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full"
+                  style={{ width: `${(playedSeconds / duration) * 100}%` }}
                 />
-                {/* Custom Controls */}
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 flex items-center justify-between">
-                  <button
-                    onClick={togglePlayPause}
-                    className="text-white hover:text-gray-300"
-                  >
-                    {isPlaying ? "Pause" : "Play"}
-                  </button>
-                  <div className="flex-1 mx-4">
-                    <input
-                      type="range"
-                      min={0}
-                      max={lectures[currentLectureIndex].duration}
-                      value={playedSeconds}
-                      onChange={(e) => handleSeek(Number(e.target.value))}
-                      className="w-full"
-                    />
-                  </div>
-                  <span className="text-white">
-                    {Math.floor(playedSeconds)} /{" "}
-                    {lectures[currentLectureIndex].duration} sec
-                  </span>
-                </div>
-              </div>
-              <div className="mt-4">
-                <p>
-                  Progress: {Math.round(playedSeconds)} /{" "}
-                  {lectures[currentLectureIndex].duration} seconds
-                </p>
-                <div className="w-full bg-gray-700 h-2 rounded-full mt-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full"
-                    style={{
-                      width: `${
-                        (playedSeconds /
-                          lectures[currentLectureIndex].duration) *
-                        100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
               </div>
             </div>
           </div>
 
           {/* Lecture List Section */}
-          <div className="bg-gray-800 p-4 rounded-lg">
+          <div className="lg:w-1/3 bg-gray-800 p-4 rounded-lg min-h-[400px] overflow-y-auto">
             <h2 className="text-xl font-semibold mb-4">Lecture List</h2>
             <ul>
-              {lectures?.map((lecture, index) => {
+              {lectures.map((lecture, index) => {
                 const progress = getLectureProgress(lecture._id);
                 const isCompleted = completedLectures.has(lecture._id);
                 return (
@@ -295,6 +249,48 @@ const StudentDashboard: React.FC = () => {
                 );
               })}
             </ul>
+          </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-4">Comments</h3>
+          <div className="bg-gray-700 p-4 rounded-lg">
+            <div className="space-y-4">
+              {/* Example Comments */}
+              {COMMENTS.map((comment) => (
+                <div key={comment.id} className="flex items-start space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                    {comment.name[0]}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold">{comment.name}</span>
+                      <span className="text-sm text-gray-400">
+                        {comment.time}
+                      </span>
+                    </div>
+                    <p className="text-gray-300 mt-1">{comment.text}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Comment Section */}
+            <div className="mt-6">
+              <textarea
+                className="w-full p-2 bg-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Add a comment..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+              <button
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onClick={handleCommentSubmit}
+              >
+                Submit
+              </button>
+            </div>
           </div>
         </div>
       </div>

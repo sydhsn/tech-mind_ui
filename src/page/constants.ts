@@ -8,6 +8,8 @@ export const AUTH_ACTIONS = {
   LOGIN: "auth/login",
   REGISTER: "auth/register",
   LOGOUT: "auth/logout",
+  CHANGE_PASSWORD: "auth/change-password",
+  refreshToken: "auth/refresh-token" as const,
   UPDATE_PROFILE: (userId: string) => `auth/profile/update/${userId}`,
 } as const;
 

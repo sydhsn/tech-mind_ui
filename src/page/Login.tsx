@@ -81,7 +81,7 @@ const Login: React.FC = () => {
   }, [isLoginSuccess]);
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-900 text-white p-6 md:p-10 overflow-hidden">
+    <div className="flex h-screen items-center justify-center text-white p-6 md:p-10 overflow-hidden">
       <div className="w-full max-w-sm md:max-w-3xl p-8">
         <div className="flex justify-center mb-6">
           <img src={Logo} alt="Logo" className="h-12" />
