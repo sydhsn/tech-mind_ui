@@ -19,14 +19,16 @@ const isTokenExpired = (token: string) => {
 const refreshAccessToken = async () => {
   try {
     const refreshToken = getRefreshToken();
-    if (!refreshToken) throw new Error("No refresh token available");
+    if (!refreshToken) {
+      console.error("No refresh token found in localStorage");
+      throw new Error("No refresh token available");
+    }
 
-    const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+    const response = await axios.post(`${API_BASE_URL}auth/refresh-token`, {
       refreshToken,
     });
 
     const { accessToken, refreshToken: newRefreshToken } = response.data;
-
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", newRefreshToken);
 
@@ -56,6 +58,12 @@ axiosInstance.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.error("No access token available");
+      // Redirect to login page only if the current route is not the login page
+      if (window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
     }
 
     return config;
@@ -66,13 +74,27 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized errors
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
       const token = await refreshAccessToken();
       if (token) {
-        error.config.headers.Authorization = `Bearer ${token}`;
-        return axiosInstance.request(error.config);
+        originalRequest.headers.Authorization = `Bearer ${token}`;
+        return axiosInstance(originalRequest); // Retry the original request
+      } else {
+        console.error("Failed to refresh token, redirecting to login");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        // Redirect to login page only if the current route is not the login page
+        if (window.location.pathname !== "/") {
+          window.location.href = "/";
+        }
       }
     }
+
     return Promise.reject(error);
   }
 );

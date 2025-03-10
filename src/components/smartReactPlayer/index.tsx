@@ -131,13 +131,13 @@ const SmartReactPlayer: React.FC<SmartReactPlayerProps> = ({
         controls={enableControls}
         onSeeking={handleSeeking}
         preload="metadata"
-        className="w-full h-auto max-w-full"
+        className="w-full h-[400px] max-w-full"
       />
-      <div className="video-info">
+      {/* <div className="video-info">
         <span>
           Time: {currentTimeRef.current.toFixed(2)}s / {duration.toFixed(2)}s
         </span>
-      </div>
+      </div> */}
     </div>
   );
 };

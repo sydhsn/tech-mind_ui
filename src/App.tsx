@@ -65,17 +65,17 @@ const routes = createRoutesFromElements(
       />
 
       {/* <Route
-        path="student-dashboard"
-        element={
-          <RoleProtectedRoute allowedRoles={["student", "admin"]}>
-            <Layout />
-          </RoleProtectedRoute>
-        }
+      path="student-dashboard"
+      element={
+        <RoleProtectedRoute allowedRoles={["student", "admin"]}>
+        <Layout />
+        </RoleProtectedRoute>
+      }
       /> */}
       <Route
         path="student-dashboard/:courseId"
         element={
-          <RoleProtectedRoute allowedRoles={["student", "admin"]}>
+          <RoleProtectedRoute allowedRoles={["student", "admin", "teacher"]}>
             <StudentDashboard />
           </RoleProtectedRoute>
         }
@@ -117,7 +117,11 @@ const routes = createRoutesFromElements(
 
       <Route
         path="/home/course-details/:courseId"
-        element={<CourseDetailsPage />}
+        element={
+          <RoleProtectedRoute allowedRoles={["student", "teacher", "admin"]}>
+            <CourseDetailsPage />
+          </RoleProtectedRoute>
+        }
       />
     </Route>
   </>

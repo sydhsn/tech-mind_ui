@@ -18,6 +18,7 @@ interface Lecture {
   };
   duration: number;
 }
+
 const COMMENTS = [
   {
     id: 1,
@@ -38,6 +39,7 @@ const COMMENTS = [
     text: "The video quality is excellent.",
   },
 ];
+
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const { courseId } = useParams<{ courseId: string }>();
@@ -45,7 +47,9 @@ const StudentDashboard: React.FC = () => {
   const [currentLectureIndex, setCurrentLectureIndex] = useState(0);
   const [playedSeconds, setPlayedSeconds] = useState(0);
   const [duration, setDuration] = useState<number>(0);
-  const [completedLectures] = useState<Set<string>>(new Set());
+  const [completedLectures, setCompletedLectures] = useState<Set<string>>(
+    new Set()
+  );
   const [comment, setComment] = useState("");
 
   const [fetchLecturesByCourseId] = useLazyGetLecturesByCourseIdQuery();
@@ -115,25 +119,52 @@ const StudentDashboard: React.FC = () => {
     [lectures, currentLectureIndex]
   );
 
+  // Check if all lectures are completed
+  const allLecturesCompleted = completedLectures.size === lectures.length;
+
   // Memoized lecture progress calculation
   const getLectureProgress = useCallback(
     (lectureId: string) => {
       if (lectureId === lectures[currentLectureIndex]._id) {
         return (playedSeconds / lectures[currentLectureIndex].duration) * 100;
       }
-      return completedLectures.has(lectureId) ? 100 : 0;
+      return completedLectures.has(lectureId) || allLecturesCompleted ? 100 : 0;
     },
-    [currentLectureIndex, lectures, playedSeconds, completedLectures]
+    [
+      currentLectureIndex,
+      lectures,
+      playedSeconds,
+      completedLectures,
+      allLecturesCompleted,
+    ]
   );
+
+  // Handle lecture completion
+  useEffect(() => {
+    if (duration > 0 && playedSeconds >= duration) {
+      // Mark the current lecture as completed
+      setCompletedLectures((prev) =>
+        new Set(prev).add(lectures[currentLectureIndex]._id)
+      );
+
+      // Move to the next lecture if available
+      if (currentLectureIndex < lectures.length - 1) {
+        setCurrentLectureIndex(currentLectureIndex + 1);
+        setPlayedSeconds(0); // Reset playedSeconds for the next lecture
+      } else {
+        toast.success("You have completed all lectures!");
+      }
+    }
+  }, [playedSeconds, duration, currentLectureIndex, lectures]);
 
   // Handle lecture navigation
   const handleLectureClick = useCallback(
     (index: number) => {
       if (
         index > currentLectureIndex &&
-        !completedLectures.has(lectures[index]._id)
+        !completedLectures.has(lectures[currentLectureIndex]._id)
       ) {
-        toast.success(
+        toast.error(
           "Please complete the current lecture before moving to the next one."
         );
         return;
@@ -155,6 +186,14 @@ const StudentDashboard: React.FC = () => {
     toast.success("Comment submitted successfully!");
   }, [comment]);
 
+  // Disable right-click and keyboard shortcuts
+  const handleDisableDownload = (
+    event: React.MouseEvent | React.KeyboardEvent
+  ) => {
+    event.preventDefault();
+    toast.info("Downloading videos is not allowed.");
+  };
+
   if (isProgressLoading || !lectures.length) {
     return <div className="text-center text-white">Loading...</div>;
   }
@@ -171,7 +210,12 @@ const StudentDashboard: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">
               Lecture {lectures[currentLectureIndex].lectureTitle}
             </h2>
-            <div className="relative h-[400px] overflow-hidden rounded-lg">
+            <div
+              className="relative h-[400px] rounded-lg"
+              onContextMenu={handleDisableDownload} // Disable right-click
+              onKeyDown={handleDisableDownload} // Disable keyboard shortcuts
+              draggable={false} // Disable drag-and-drop
+            >
               <SmartReactPlayer
                 src={videoUrl}
                 initialProgress={playedSeconds}
@@ -204,7 +248,8 @@ const StudentDashboard: React.FC = () => {
             <ul>
               {lectures.map((lecture, index) => {
                 const progress = getLectureProgress(lecture._id);
-                const isCompleted = completedLectures.has(lecture._id);
+                const isCompleted =
+                  completedLectures.has(lecture._id) || allLecturesCompleted;
                 return (
                   <li
                     key={lecture._id}
