@@ -186,6 +186,14 @@ const StudentDashboard: React.FC = () => {
     toast.success("Comment submitted successfully!");
   }, [comment]);
 
+  // Disable right-click and keyboard shortcuts
+  const handleDisableDownload = (
+    event: React.MouseEvent | React.KeyboardEvent
+  ) => {
+    event.preventDefault();
+    toast.info("Downloading videos is not allowed.");
+  };
+
   if (isProgressLoading || !lectures.length) {
     return <div className="text-center text-white">Loading...</div>;
   }
@@ -202,7 +210,12 @@ const StudentDashboard: React.FC = () => {
             <h2 className="text-xl font-semibold mb-4">
               Lecture {lectures[currentLectureIndex].lectureTitle}
             </h2>
-            <div className="relative h-[400px] rounded-lg">
+            <div
+              className="relative h-[400px] rounded-lg"
+              onContextMenu={handleDisableDownload} // Disable right-click
+              onKeyDown={handleDisableDownload} // Disable keyboard shortcuts
+              draggable={false} // Disable drag-and-drop
+            >
               <SmartReactPlayer
                 src={videoUrl}
                 initialProgress={playedSeconds}
