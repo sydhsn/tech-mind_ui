@@ -4,7 +4,9 @@ import { LECTURE_ACTIONS, METHOD, PROGRESS_ACTIONS } from "../page/constants";
 // Define your types
 interface SaveLectureRequest {
   courseId: string;
-  formData: FormData; // Use FormData instead of lectures array
+  lectureTitle: string;
+  isPreviewFree: boolean;
+  publicId: string; // Add assetsId
 }
 
 interface SaveLectureResponse {
@@ -55,13 +57,13 @@ const lectureAPI = apiGateway.injectEndpoints({
       SaveLectureResponse,
       SaveLectureRequest
     >({
-      query: ({ courseId, formData }) => {
+      query: ({ courseId, lectureTitle, isPreviewFree, publicId }) => {
         return {
           actionName: `${LECTURE_ACTIONS.LECTURES}/${courseId}`, // Include courseId in the URL
           methodType: METHOD.POST,
-          body: formData, // Send FormData directly
+          body: { lectureTitle, isPreviewFree, publicId }, // Send JSON data
           headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json", // Use JSON instead of multipart/form-data
           },
         };
       },
@@ -121,5 +123,5 @@ export const {
   useLazyCheckCourseHasLectureQuery,
   useLazyGetLecturesByCourseIdQuery,
   useSaveProgressMutation,
-  useGetUserProgressQuery, // Add this query
+  useGetUserProgressQuery,
 } = lectureAPI;

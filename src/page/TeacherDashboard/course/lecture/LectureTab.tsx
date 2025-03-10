@@ -13,19 +13,13 @@ interface LectureTabProps {
 interface LectureFormData {
   lectureTitle: string;
   isPreviewFree: boolean;
-  videoFile?: any;
+  publicId: string; // Replaced assetsId with publicId
 }
 
 const lectureSchema = yup.object().shape({
   lectureTitle: yup.string().required("Lecture Title is required"),
   isPreviewFree: yup.boolean().default(false),
-  videoFile: yup
-    .mixed()
-    .nullable()
-    .test("file-or-undefined", "Video File is required", (value) => {
-      return value === undefined || value instanceof File;
-    })
-    .required("Video File is required"),
+  publicId: yup.string().required("Public ID is required"), // Validate publicId
 });
 
 const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
@@ -33,50 +27,33 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<LectureFormData>({
     resolver: yupResolver<LectureFormData>(lectureSchema),
     defaultValues: {
       lectureTitle: "",
       isPreviewFree: false,
-      videoFile: undefined,
+      publicId: "", // Initialize publicId
     },
+    mode: "onChange",
   });
 
   const [isUploading, setIsUploading] = useState(false);
   const [saveLectures] = useSaveLectureToCourseMutation();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-
-    if (file) {
-      console.log("Selected File:", file);
-      setValue("videoFile", file, { shouldValidate: true }); // Store File object
-    }
-  };
-
   const onSubmit: SubmitHandler<LectureFormData> = async (data) => {
-    if (!data.videoFile) {
-      toast.error("Please upload a video file.");
+    if (!data.publicId) {
+      toast.error("Please upload a video and provide the Public ID.");
       return;
-    }
-
-    const formData = new FormData();
-    formData.append("lectureTitle", data.lectureTitle.trim()); // Correct key
-    formData.append("isPreviewFree", String(data.isPreviewFree)); // Convert boolean to string
-    formData.append("videoFile", data.videoFile); // Append the file directly
-
-    console.log("Submitting FormData:");
-
-    for (const pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
     }
 
     try {
       setIsUploading(true);
       await saveLectures({
         courseId: courseId ?? "",
-        formData, // Send FormData directly
+        lectureTitle: data.lectureTitle.trim(),
+        isPreviewFree: data.isPreviewFree,
+        publicId: data.publicId, // Pass publicId to the API
       }).unwrap();
       setIsUploading(false);
       handleReset();
@@ -90,7 +67,7 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
   const handleReset = () => {
     setValue("lectureTitle", "");
     setValue("isPreviewFree", false);
-    setValue("videoFile", null);
+    setValue("publicId", "");
   };
 
   return (
@@ -119,18 +96,20 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
           )}
         </div>
 
-        {/* Video Upload */}
+        {/* Public ID Input */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-white">
-            Upload Video
+            Public ID (from Cloudinary)
           </label>
           <input
-            type="file"
-            onChange={handleFileChange}
+            type="text"
             className="w-full p-2 bg-gray-700 text-white rounded"
-            accept="video/*"
-            disabled={isUploading}
+            placeholder="Enter Public ID (e.g., lecture_videos/your-video-id)"
+            {...register("publicId")}
           />
+          {errors.publicId && (
+            <p className="text-red-500 text-sm">{errors.publicId.message}</p>
+          )}
         </div>
 
         {/* Free Preview Toggle */}
@@ -143,9 +122,9 @@ const LectureTab: React.FC<LectureTabProps> = ({ courseId }) => {
         <Button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          disabled={isUploading}
+          disabled={!isValid || isUploading}
         >
-          Save Lecture
+          {isUploading ? "Saving..." : "Save Lecture"}
         </Button>
       </form>
     </div>
