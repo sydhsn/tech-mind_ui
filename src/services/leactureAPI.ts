@@ -69,6 +69,38 @@ const lectureAPI = apiGateway.injectEndpoints({
       },
     }),
 
+    // Update lecture mutation
+    updateLecture: build.mutation<
+      SaveLectureResponse,
+      {
+        lectureId: string;
+        lectureTitle: string;
+        isPreviewFree: boolean;
+        publicId: string;
+      }
+    >({
+      query: ({ lectureId, lectureTitle, isPreviewFree, publicId }) => {
+        return {
+          actionName: `${LECTURE_ACTIONS.LECTURES}/${lectureId}`,
+          methodType: METHOD.PUT,
+          body: { lectureTitle, isPreviewFree, publicId },
+          headers: {
+            "Content-Type": "application/json",
+          },
+        };
+      },
+    }),
+
+    // Delete lecture mutation
+    deleteLecture: build.mutation<SaveLectureResponse, string>({
+      query: (lectureId) => {
+        return {
+          actionName: `${LECTURE_ACTIONS.LECTURES}/${lectureId}`,
+          methodType: METHOD.DELETE,
+        };
+      },
+    }),
+
     // Check if course has lectures
     checkCourseHasLecture: build.query<HasLectureResponse, string>({
       query: (courseId) => {
@@ -120,6 +152,8 @@ const lectureAPI = apiGateway.injectEndpoints({
 
 export const {
   useSaveLectureToCourseMutation,
+  useUpdateLectureMutation,
+  useDeleteLectureMutation,
   useLazyCheckCourseHasLectureQuery,
   useLazyGetLecturesByCourseIdQuery,
   useSaveProgressMutation,
