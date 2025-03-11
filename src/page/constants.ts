@@ -2,6 +2,7 @@ export const METHOD = {
   POST: "POST",
   PUT: "PUT",
   GET: "GET",
+  DELETE: "DELETE",
 } as const;
 
 export const AUTH_ACTIONS = {
